@@ -1,0 +1,33 @@
+{
+  "generator-jhipster": {
+    "additionalSubGenerators": "llm",
+    "baseName": "llm",
+    "cli": true,
+    "entities": [],
+    "generators": {
+      "app": {
+        "command": false,
+        "priorities": ["initializing", "prompting", "composing"],
+        "sbs": true,
+        "written": true
+      },
+      "llm": {
+        "command": false,
+        "priorities": ["initializing", "prompting", "configuring", "writing", "writingEntities", "postWriting", "install", "end"],
+        "sbs": null,
+        "written": true
+      },
+      "project-name": {
+        "command": false,
+        "priorities": ["initializing", "prompting"],
+        "sbs": true,
+        "written": true
+      }
+    },
+    "jhipsterVersion": "8.1.0",
+    "localBlueprint": false,
+    "sampleWritten": true,
+    "skipCommitHook": true,
+    "subGenerators": ["app", "project-name"]
+  }
+}
