@@ -1310,7 +1310,7 @@ exports[`SubGenerator app of llm JHipster blueprint > run > should succeed 1`] =
   "src/test/resources/templates/mail/testEmail.html": {
     "stateCleared": "modified",
   },
-  "template-file-server": {
+  "template-file-llm": {
     "stateCleared": "modified",
   },
   "tsconfig.app.json": {
