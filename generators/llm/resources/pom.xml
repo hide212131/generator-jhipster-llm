@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>jhipster-dependabot</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <repositories>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
+        <repository>
+            <id>spring-snapshots</id>
+            <name>Spring Snapshots</name>
+            <url>https://repo.spring.io/snapshot</url>
+        </repository>
+    </repositories>
+
+    <properties>
+        <!-- Dependency versions -->
+        <spring-ai.version>0.8.0</spring-ai.version>
+        <java-llamacpp.version>2.3.5</java-llamacpp.version>
+        <model.home>${project.basedir}/models</model.home>
+        <integration.test.model>mistral-7b-instruct-v0.2.Q2_K.gguf</integration.test.model>
+        <integration.test.model.url>https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/${integration.test.model}</integration.test.model.url>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+              <groupId>org.springframework.ai</groupId>
+              <artifactId>spring-ai-core</artifactId>
+              <version>${spring-ai.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.kherud</groupId>
+                <artifactId>llama</artifactId>
+                <version>${java-llamacpp.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-core</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>        
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-pgvector-store</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-pgvector-store-spring-boot-starter</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.6.1</version>
+        </dependency>
+        <dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-pdf-document-reader</artifactId>
+			<version>${spring-ai.version}</version>
+		</dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-transformers</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-transformers-spring-boot-starter</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>de.kherud</groupId>
+            <artifactId>llama</artifactId>
+            <version>${java-llamacpp.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>Download the integration test model if it doesn't exist</id>
+                        <phase>integration-test</phase>
+                        <configuration>
+                            <target>
+                                <!-- Check if the system property is set -->
+                                <condition property="isModelHomeSet" value="true">
+                                    <isset property="model.home"/>
+                                </condition>
+
+                                <!-- Fail the build if the property is not set -->
+                                <fail message="The 'model.home' system property is not set." unless="isModelHomeSet"/>
+                                <!-- Check if the directory exists -->
+                                <available file="${model.home}" type="dir" property="model.home.exists"/>
+
+                                <!-- Fail the build if the directory does not exist -->
+                                <fail message="Model home directory does not exist: ${model.home}" unless="model.home.exists"/>
+
+                                <!-- Define the file path using the system property -->
+                                <property name="modelPath" value="${model.home}${file.separator}${integration.test.model}"/>
+
+                                <!-- Check if the file exists -->
+                                <available file="${modelPath}" property="fileExists"/>
+
+                                <!-- Download the file if it doesn't exist -->
+                                <get src="${integration.test.model.url}" dest="${modelPath}" skipexisting="true"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

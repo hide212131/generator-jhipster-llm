@@ -1,6 +1,6 @@
 import BaseApplicationGenerator from 'generator-jhipster/generators/base-application';
 import command from './command.mjs';
-
+import { getPomElements } from './utils-maven.mjs';
 export default class extends BaseApplicationGenerator {
   get [BaseApplicationGenerator.INITIALIZING]() {
     return this.asInitializingTaskGroup({
@@ -20,6 +20,15 @@ export default class extends BaseApplicationGenerator {
   get [BaseApplicationGenerator.CONFIGURING]() {
     return this.asConfiguringTaskGroup({
       async configuringTemplateTask() {},
+    });
+  }
+
+  get [BaseApplicationGenerator.PREPARING]() {
+    return this.asPreparingTaskGroup({
+      async defaultTask({ application }) {
+        const pomFile = this.readTemplate(this.templatePath('../resources/pom.xml'));
+        application.llmPomAdditions = getPomElements(pomFile);
+      },
     });
   }
 
@@ -44,7 +53,14 @@ export default class extends BaseApplicationGenerator {
 
   get [BaseApplicationGenerator.POST_WRITING]() {
     return this.asPostWritingTaskGroup({
-      async postWritingTemplateTask() {},
+      async postWritingTemplateTask({ source, application: { llmPomAdditions, buildToolMaven } }) {
+        if (buildToolMaven) {
+          source.addMavenProperty?.(Object.entries(llmPomAdditions.properties).map(([property, value]) => ({ property, value })));
+          source.addMavenRepository?.(llmPomAdditions.repositories);
+          source.addMavenDependency?.(llmPomAdditions.dependencies);
+          source.addMavenPlugin?.({ additionalContent: llmPomAdditions.buildPlugin });
+        }
+      },
     });
   }
 
