@@ -1,0 +1,37 @@
+package com.mycompany.myapp.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+@ConfigurationProperties(LlamaCppProperties.CONFIG_PREFIX)
+public class LlamaCppProperties {
+
+    public static final String CONFIG_PREFIX = "spring.ai.llama-cpp";
+
+    private String modelHome;
+    private String modelName;
+    private String embeddingModelName;
+
+    public String getModelHome() {
+        return modelHome;
+    }
+
+    public void setModelHome(String modelHome) {
+        this.modelHome = modelHome;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
+    }
+
+    public String getEmbeddingModelName() {
+        return embeddingModelName;
+    }
+
+    public void setEmbeddingModelName(String embeddingModelName) {
+        this.embeddingModelName = embeddingModelName;
+    }
+}

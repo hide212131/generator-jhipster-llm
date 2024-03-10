@@ -1,0 +1,24 @@
+package com.mycompany.myapp.web.rest.chat;
+
+import com.mycompany.myapp.service.api.dto.ListModelsResponse;
+import com.mycompany.myapp.service.api.dto.Model;
+import com.mycompany.myapp.web.api.ModelsApi;
+import jakarta.annotation.Generated;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-01-08T22:40:49.631444+09:00[Asia/Tokyo]")
+@Controller
+@RequestMapping("${openapi.my-llm-app.base-path:/v1}")
+public class ModelsApiController implements ModelsApi {
+
+    @Override
+    public Mono<ResponseEntity<ListModelsResponse>> listModels(final ServerWebExchange exchange) {
+        var response = new ListModelsResponse();
+        response.addDataItem(new Model("gpt-3.5-turbo", 0L, Model.ObjectEnum.MODEL, "kagamih"));
+        return Mono.just(ResponseEntity.ok(response));
+    }
+}

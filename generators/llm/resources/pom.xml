@@ -50,16 +50,6 @@
             <version>${spring-ai.version}</version>
         </dependency>        
         <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-pgvector-store</artifactId>
-            <version>${spring-ai.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-pgvector-store-spring-boot-starter</artifactId>
-            <version>${spring-ai.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
             <version>3.6.1</version>
@@ -89,41 +79,18 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.0.0</version>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
                 <executions>
                     <execution>
                         <id>Download the integration test model if it doesn't exist</id>
                         <phase>integration-test</phase>
-                        <configuration>
-                            <target>
-                                <!-- Check if the system property is set -->
-                                <condition property="isModelHomeSet" value="true">
-                                    <isset property="model.home"/>
-                                </condition>
-
-                                <!-- Fail the build if the property is not set -->
-                                <fail message="The 'model.home' system property is not set." unless="isModelHomeSet"/>
-                                <!-- Check if the directory exists -->
-                                <available file="${model.home}" type="dir" property="model.home.exists"/>
-
-                                <!-- Fail the build if the directory does not exist -->
-                                <fail message="Model home directory does not exist: ${model.home}" unless="model.home.exists"/>
-
-                                <!-- Define the file path using the system property -->
-                                <property name="modelPath" value="${model.home}${file.separator}${integration.test.model}"/>
-
-                                <!-- Check if the file exists -->
-                                <available file="${modelPath}" property="fileExists"/>
-
-                                <!-- Download the file if it doesn't exist -->
-                                <get src="${integration.test.model.url}" dest="${modelPath}" skipexisting="true"/>
-                            </target>
-                        </configuration>
                         <goals>
-                            <goal>run</goal>
+                            <goal>npm</goal>
                         </goals>
+                        <configuration>
+                            <arguments>run llm:download-model -- ${model.home} ${integration.test.model} ${integration.test.model.url}</arguments>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

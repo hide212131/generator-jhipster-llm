@@ -1,0 +1,30 @@
+import fetch from 'node-fetch';
+import fs from 'fs-extra';
+import path from 'path';
+import { pipeline } from 'stream/promises';
+
+const [modelHome, modelName, modelUrl] = process.argv.slice(2);
+const modelPath = path.join(modelHome, modelName);
+
+const downloadModel = async () => {
+  try {
+    if (await fs.pathExists(modelPath)) {
+      console.log(`Model already exists at ${modelPath}`);
+      return;
+    }
+
+    console.log(`Downloading model from ${modelUrl}`);
+    const res = await fetch(modelUrl, { redirect: 'follow' });
+    if (!res.ok) {
+      throw new Error(`Failed to download model: ${res.status} ${res.statusText}`);
+    }
+
+    await pipeline(res.body, fs.createWriteStream(modelPath));
+    console.log('Download completed.');
+  } catch (err) {
+    console.error('An error occurred:', err);
+    await fs.remove(modelPath); // Delete the file if it exists
+  }
+};
+
+downloadModel();
