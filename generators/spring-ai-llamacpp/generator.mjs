@@ -14,7 +14,19 @@ export default class extends BaseApplicationGenerator {
 
   get [BaseApplicationGenerator.PROMPTING]() {
     return this.asPromptingTaskGroup({
-      async promptingTemplateTask() {},
+      async promptingTemplateTask() {
+        await this.prompt(
+          [
+            {
+              type: 'input',
+              name: 'llmModelName',
+              message: 'What is the name of the LLM model?',
+              default: 'mistral-7b-instruct-v0.2.Q2_K.gguf',
+            },
+          ],
+          this.blueprintStorage,
+        );
+      },
     });
   }
 
