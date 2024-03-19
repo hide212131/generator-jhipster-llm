@@ -1,5 +1,5 @@
 import BaseApplicationGenerator from 'generator-jhipster/generators/base-application';
-import { javaMainPackageTemplatesBlock } from 'generator-jhipster/generators/java/support';
+import { javaMainPackageTemplatesBlock, moveToJavaPackageSrcDir } from 'generator-jhipster/generators/java/support';
 import command from './command.mjs';
 import { getPomElements } from './utils-maven.mjs';
 export default class extends BaseApplicationGenerator {
@@ -58,11 +58,18 @@ export default class extends BaseApplicationGenerator {
                   'config/JacksonConfig.java',
                   'config/LlamaCppAutoConfiguration.java',
                   'config/LlamaCppProperties.java',
-                  'web/rest/chat/FluxChatApiController.java',
                   'web/rest/chat/ModelsApiController.java',
-                  'web/rest/chat/FluxChatApi.java',
                   'service/llm/LlamaPrompt.java',
                   'service/llm/LlamaCppChatClient.java',
+                ],
+              },
+              {
+                condition: generator => generator.clientFrameworkAny,
+                path: `src/main/java/_package_/`,
+                renameTo: moveToJavaPackageSrcDir,
+                templates: [
+                  data => `web/rest/chat/ChatApiController_${data.imperativeOrReactive}.java`,
+                  data => `web/rest/chat/ChatApi_${data.imperativeOrReactive}.java`,
                 ],
               },
               {
@@ -139,16 +146,23 @@ openapi.my-llm-app.base-path: /api/llm/v1
             ),
         );
       },
-      async customizeSecurityConfig() {
+      async customizeSecurityConfig({ application: { reactive } }) {
         this.editFile(`src/main/java/com/mycompany/myapp/config/SecurityConfiguration.java`, content =>
-          content.replace('"/app/**",', `"/chat-ui/**", "/app/**",`).replace(
-            '.pathMatchers("/api/**").authenticated()',
-            `.pathMatchers("/api/llm/**").permitAll()
-                    .pathMatchers("/api/**").authenticated()`,
-          ),
+          reactive
+            ? content.replace('"/app/**",', `"/chat-ui/**", "/app/**",`).replace(
+                '.pathMatchers("/api/**").authenticated()',
+                `.pathMatchers("/api/llm/**").permitAll()
+                      .pathMatchers("/api/**").authenticated()`,
+              )
+            : content.replace(
+                '.requestMatchers(mvc.pattern("/api/**")).authenticated()',
+                `.requestMatchers(mvc.pattern("/api/llm/**")).permitAll()
+                    .requestMatchers(mvc.pattern("/chat-ui/**")).permitAll()
+                    .requestMatchers(mvc.pattern("/api/**")).authenticated()`,
+              ),
         );
       },
-      async cusomizeMaven({ source, application: { llmPomAdditions, buildToolMaven } }) {
+      async cusomizeMaven({ source, application: { llmPomAdditions, buildToolMaven, reactive } }) {
         if (buildToolMaven) {
           source.addMavenProperty?.(Object.entries(llmPomAdditions.properties).map(([property, value]) => ({ property, value })));
           source.addMavenRepository?.(llmPomAdditions.repositories);
@@ -165,9 +179,10 @@ openapi.my-llm-app.base-path: /api/llm/v1
               );
               content = content.replace(
                 '</useSpringBoot3>',
-                `</useSpringBoot3>
+                `</useSpringBoot3>                
                 <interfaceOnly>true</interfaceOnly>
-                <openApiNullable>false</openApiNullable>`,
+                <openApiNullable>false</openApiNullable>
+                ${!reactive ? '<reactive>true</reactive>' : ''}`, // for chat stream
               );
             }
             return content;

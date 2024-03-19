@@ -28,12 +28,12 @@ import reactor.core.publisher.Mono;
 @Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-01-08T22:40:49.631444+09:00[Asia/Tokyo]")
 @RestController
 @RequestMapping("${openapi.my-llm-app.base-path:/v1}")
-public class FluxChatApiController implements FluxChatApi {
+public class ChatApiController implements ChatApi {
 
     private final LlamaCppChatClient chatClient;
 
     @Autowired
-    public FluxChatApiController(LlamaCppChatClient chatClient) {
+    public ChatApiController(LlamaCppChatClient chatClient) {
         this.chatClient = chatClient;
     }
 
