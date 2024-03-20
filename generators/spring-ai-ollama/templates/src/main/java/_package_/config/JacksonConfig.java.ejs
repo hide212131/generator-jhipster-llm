@@ -1,0 +1,20 @@
+package com.mycompany.myapp.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.mycompany.myapp.service.api.dto.ChatCompletionRequestMessage;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class JacksonConfig {
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(ChatCompletionRequestMessage.class, new ChatCompletionRequestMessageDeserializer());
+        mapper.registerModule(module);
+        return mapper;
+    }
+}

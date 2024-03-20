@@ -1,0 +1,107 @@
+package com.mycompany.myapp.web.rest.chat;
+
+import com.mycompany.myapp.service.api.dto.*;
+import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.annotation.Generated;
+import jakarta.validation.Valid;
+
+import java.io.IOException;
+import java.util.List;
+import org.springframework.ai.chat.StreamingChatClient;
+import org.springframework.ai.chat.ChatResponse;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-01-08T22:40:49.631444+09:00[Asia/Tokyo]")
+@RestController
+@RequestMapping("${openapi.my-llm-app.base-path:/v1}")
+public class ChatApiController implements ChatApi {
+
+    private final StreamingChatClient chatClient;
+
+    @Autowired
+    public ChatApiController(StreamingChatClient chatClient) {
+        this.chatClient = chatClient;
+    }
+
+    @Override
+    public SseEmitter createChatCompletion(
+        @Valid @RequestBody CreateChatCompletionRequest createChatCompletionRequest
+    ) {
+        var messages = createChatCompletionRequest.getMessages();
+        var prompt = new Prompt(
+            messages
+                .stream()
+                .map(message -> {
+                    if (message instanceof ChatCompletionRequestSystemMessage systemMessage) {
+                        return (Message) new SystemMessage(systemMessage.getContent());
+                    } else if (message instanceof ChatCompletionRequestUserMessage userMessage) {
+                        return (Message) new UserMessage(userMessage.getContent());
+                    } else if (message instanceof ChatCompletionRequestAssistantMessage assistantMessage) {
+                        return (Message) new AssistantMessage(assistantMessage.getContent());
+                    } else {
+                        throw new RuntimeException("Unknown message type");
+                    }
+                })
+                .toList()
+        );
+
+        SseEmitter emitter = new SseEmitter();
+        chatClient.stream(prompt)
+            .subscribeOn(Schedulers.boundedElastic())
+            .doOnNext(chatResponse -> {
+                try {
+                    var responseDelta = new ChatCompletionStreamResponseDelta()
+                        .content(chatResponse.getResult().getOutput().getContent())
+                        .role(ChatCompletionStreamResponseDelta.RoleEnum.ASSISTANT);
+                    var choices = new CreateChatCompletionStreamResponseChoicesInner().index(0L).finishReason(null).delta(responseDelta);
+                    var response = new CreateChatCompletionStreamResponse(
+                        "chatcmpl-123",
+                        List.of(choices),
+                        System.currentTimeMillis(),
+                        "gpt-3.5-turbo",
+                        CreateChatCompletionStreamResponse.ObjectEnum.CHAT_COMPLETION_CHUNK
+                    );
+                    emitter.send(SseEmitter.event().data(response));
+                } catch (IOException e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .doOnComplete(() -> {
+                try {
+                    var response = new CreateChatCompletionStreamResponse(
+                        "chatcmpl-123",
+                        List.of(
+                            new CreateChatCompletionStreamResponseChoicesInner()
+                                .index(0L)
+                                .finishReason(CreateChatCompletionStreamResponseChoicesInner.FinishReasonEnum.STOP)
+                                .delta(new ChatCompletionStreamResponseDelta())
+                        ),
+                        System.currentTimeMillis(),
+                        "gpt-3.5-turbo",
+                        CreateChatCompletionStreamResponse.ObjectEnum.CHAT_COMPLETION_CHUNK
+                    );
+                    emitter.send(SseEmitter.event().data(response));
+                    emitter.complete();
+                } catch (IOException e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .subscribe();
+
+        return emitter;
+    }
+}

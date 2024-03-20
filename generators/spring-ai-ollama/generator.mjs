@@ -16,14 +16,13 @@ export default class extends BaseApplicationGenerator {
     return this.asPromptingTaskGroup({
       async promptingTemplateTask() {
         await this.prompt(
-          [
-            {
-              type: 'input',
-              name: 'llmModelName',
-              message: 'What is the name of the LLM model?',
-              default: 'mistral-7b-instruct-v0.2.Q2_K.gguf',
-            },
-          ],
+          {
+            type: 'list',
+            name: 'llmModelName',
+            message: 'Would you like to use a LLM model (https://ollama.com/library)?',
+            choices: retrieveOllamaModels(),
+            default: 'mistral',
+          },
           this.blueprintStorage,
         );
       },
@@ -33,6 +32,15 @@ export default class extends BaseApplicationGenerator {
   get [BaseApplicationGenerator.CONFIGURING]() {
     return this.asConfiguringTaskGroup({
       async configuringTemplateTask() {},
+    });
+  }
+
+  get [BaseApplicationGenerator.LOADING]() {
+    return this.asLoadingTaskGroup({
+      prepareForTemplates({ application }) {
+        const { llmModelName } = this.blueprintConfig;
+        application.llmModelName = llmModelName;
+      },
     });
   }
 
@@ -56,11 +64,7 @@ export default class extends BaseApplicationGenerator {
                 templates: [
                   'config/ChatCompletionRequestMessageDeserializer.java',
                   'config/JacksonConfig.java',
-                  'config/LlamaCppAutoConfiguration.java',
-                  'config/LlamaCppProperties.java',
                   'web/rest/chat/ModelsApiController.java',
-                  'service/llm/LlamaPrompt.java',
-                  'service/llm/LlamaCppChatClient.java',
                 ],
               },
               {
@@ -75,6 +79,10 @@ export default class extends BaseApplicationGenerator {
               {
                 path: 'src/main/resources',
                 templates: ['swagger/api.yml'],
+              },
+              {
+                path: 'src/main/docker',
+                templates: ['ollama.yml'],
               },
               {
                 path: './',
@@ -97,10 +105,23 @@ export default class extends BaseApplicationGenerator {
 
   get [BaseApplicationGenerator.POST_WRITING]() {
     return this.asPostWritingTaskGroup({
+      async customizeDockerServices() {
+        this.editFile(`src/main/docker/services.yml`, { ignoreNonExisting: true }, contents =>
+          contents.replace(
+            '\nservices:',
+            `\nservices:
+  ollama:
+    extends:
+      file: ./ollama.yml
+      service: ollama
+  `,
+          ),
+        );
+      },
       async customizePackageJson() {
         this.packageJson.merge({
           scripts: {
-            'llm:download-model': 'node models/download-model.mjs',
+            'llm:ollama': 'docker exec -i ollama ollama',
             'webapp:build:dev': 'webpack --config webpack/webpack.dev.js --env stats=minimal && npm run webapp:build:dev:chat --',
             'webapp:build:dev:chat': 'node build-chat.mjs',
           },
@@ -123,20 +144,16 @@ export default class extends BaseApplicationGenerator {
             ),
         );
       },
-      async customizeApplicationYml() {
+      async customizeApplicationYml({ application: { llmModelName } }) {
         this.editFile(`src/main/resources/config/application-dev.yml`, { ignoreNonExisting: true }, content =>
           content
             .replace(
               '\nspring:',
               `\nspring:
   ai:
-    llama-cpp:
-      model-home: '\${SPRING_AI_LLAMA_CPP_MODEL_HOME:models}'
-      model-name: '\${SPRING_AI_LLAMA_CPP_MODEL_NAME:mistral-7b-instruct-v0.2.Q2_K.gguf}'
-    embedding:
-      transformer:
-        onnx.modelUri: '\${SPRING_AI_EMBEDDING_TRANSFORMER_ONNX_MODEL_URI:https://huggingface.co/intfloat/e5-small-v2/resolve/main/model.onnx}'
-        tokenizer.uri: '\${SPRING_AI_EMBEDDING_TRANSFORMER_TOKENIZER_URI:https://huggingface.co/intfloat/e5-small-v2/raw/main/tokenizer.json}'`,
+    ollama:
+      chat.options.model: ${llmModelName}
+`,
             )
             .replace(
               '\n# application:',
@@ -162,9 +179,10 @@ openapi.my-llm-app.base-path: /api/llm/v1
               ),
         );
       },
-      async cusomizeMaven({ source, application: { llmPomAdditions, buildToolMaven, reactive } }) {
+      async cusomizeMaven({ source, application: { llmPomAdditions, buildToolMaven, reactive, llmModelName } }) {
         if (buildToolMaven) {
           source.addMavenProperty?.(Object.entries(llmPomAdditions.properties).map(([property, value]) => ({ property, value })));
+          source.addMavenProperty?.({ property: 'llm.model.name', value: llmModelName });
           source.addMavenRepository?.(llmPomAdditions.repositories);
           source.addMavenDependency?.(llmPomAdditions.dependencies);
           source.addMavenPlugin?.({ additionalContent: llmPomAdditions.buildPlugin });
@@ -204,3 +222,23 @@ openapi.my-llm-app.base-path: /api/llm/v1
     });
   }
 }
+
+const retrieveOllamaModels = () => {
+  return [
+    { value: 'llama2', name: 'Llama 2 (7B, 3.8GB)' },
+    { value: 'mistral', name: 'Mistral (7B, 4.1GB)' },
+    { value: 'dolphin-phi', name: 'Dolphin Phi (2.7B, 1.6GB)' },
+    { value: 'phi', name: 'Phi-2 (2.7B, 1.7GB)' },
+    { value: 'neural-chat', name: 'Neural Chat (7B, 4.1GB)' },
+    { value: 'starling-lm', name: 'Starling (7B, 4.1GB)' },
+    { value: 'codellama', name: 'Code Llama (7B, 3.8GB)' },
+    { value: 'llama2-uncensored', name: 'Llama 2 Uncensored (7B, 3.8GB)' },
+    { value: 'llama2:13b', name: 'Llama 2 13B (13B, 7.3GB)' },
+    { value: 'llama2:70b', name: 'Llama 2 70B (70B, 39GB)' },
+    { value: 'orca-mini', name: 'Orca Mini (3B, 1.9GB)' },
+    { value: 'vicuna', name: 'Vicuna (7B, 3.8GB)' },
+    { value: 'llava', name: 'LLaVA (7B, 4.5GB)' },
+    { value: 'gemma:2b', name: 'Gemma (2B, 1.4GB)' },
+    { value: 'gemma:7b', name: 'Gemma (7B, 4.8GB)' },
+  ];
+};

@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import { defaultHelpers as helpers, result } from 'generator-jhipster/testing';
 
-const SUB_GENERATOR = 'llm';
+const SUB_GENERATOR = 'spring-ai-llamacpp';
 const SUB_GENERATOR_NAMESPACE = `jhipster-llm:${SUB_GENERATOR}`;
 
 describe('SubGenerator llm of llm JHipster blueprint', () => {

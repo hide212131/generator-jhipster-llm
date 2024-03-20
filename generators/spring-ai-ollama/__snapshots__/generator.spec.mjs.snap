@@ -17,6 +17,9 @@ exports[`SubGenerator llm of llm JHipster blueprint > run > should succeed 1`] =
   "package.json": {
     "stateCleared": "modified",
   },
+  "src/main/docker/ollama.yml": {
+    "stateCleared": "modified",
+  },
   "src/main/resources/swagger/api.yml": {
     "stateCleared": "modified",
   },
@@ -24,18 +27,6 @@ exports[`SubGenerator llm of llm JHipster blueprint > run > should succeed 1`] =
     "stateCleared": "modified",
   },
   "undefinedconfig/JacksonConfig.java": {
-    "stateCleared": "modified",
-  },
-  "undefinedconfig/LlamaCppAutoConfiguration.java": {
-    "stateCleared": "modified",
-  },
-  "undefinedconfig/LlamaCppProperties.java": {
-    "stateCleared": "modified",
-  },
-  "undefinedservice/llm/LlamaCppChatClient.java": {
-    "stateCleared": "modified",
-  },
-  "undefinedservice/llm/LlamaPrompt.java": {
     "stateCleared": "modified",
   },
   "undefinedweb/rest/chat/ModelsApiController.java": {

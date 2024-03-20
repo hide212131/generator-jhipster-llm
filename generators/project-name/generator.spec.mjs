@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { defaultHelpers as helpers, result } from 'generator-jhipster/testing';
 
 const SUB_GENERATOR = 'project-name';
-const BLUEPRINT_NAMESPACE = `jhipster:${SUB_GENERATOR}`;
+const BLUEPRINT_NAMESPACE = `jhipster-llm:${SUB_GENERATOR}`;
 
 describe('SubGenerator project-name of llm JHipster blueprint', () => {
   describe('run', () => {

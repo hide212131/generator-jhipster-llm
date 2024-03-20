@@ -30,8 +30,8 @@ export default class extends BaseApplicationGenerator {
                   name: 'Java Bindings for llama.cpp',
                 },
                 {
-                  value: 'openai',
-                  name: 'OpenAI',
+                  value: 'ollama',
+                  name: 'Ollama',
                 },
               ],
               default: 'llamacpp',
@@ -48,6 +48,8 @@ export default class extends BaseApplicationGenerator {
       async composingTemplateTask() {
         if (this.blueprintConfig.llmLibrary === 'llamacpp') {
           await this.composeWithJHipster(`jhipster-llm:spring-ai-llamacpp`);
+        } else {
+          await this.composeWithJHipster(`jhipster-llm:spring-ai-ollama`);
         }
       },
     });
