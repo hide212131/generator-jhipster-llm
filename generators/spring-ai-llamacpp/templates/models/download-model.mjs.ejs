@@ -2,6 +2,7 @@ import fetch from 'node-fetch';
 import fs from 'fs-extra';
 import path from 'path';
 import { pipeline } from 'stream/promises';
+import { Transform } from 'readable-stream';
 
 const [modelHome, modelName, modelUrl] = process.argv.slice(2);
 const modelPath = path.join(modelHome, modelName);
@@ -19,7 +20,23 @@ const downloadModel = async () => {
       throw new Error(`Failed to download model: ${res.status} ${res.statusText}`);
     }
 
-    await pipeline(res.body, fs.createWriteStream(modelPath));
+    const totalSize = parseInt(res.headers.get('content-length'), 10);
+    let downloadedSize = 0;
+    let lastDisplayedProgress = 0;
+
+    const progressTransform = new Transform({
+      transform(chunk, encoding, callback) {
+        downloadedSize += chunk.length;
+        const progress = (downloadedSize / totalSize) * 100;
+        if (progress >= lastDisplayedProgress + 10) {
+          console.log(`Downloading... ${progress.toFixed(0)}% (${downloadedSize} / ${totalSize} bytes)`);
+          lastDisplayedProgress = Math.floor(progress / 10) * 10;
+        }
+        callback(null, chunk);
+      },
+    });
+
+    await pipeline(res.body, progressTransform, fs.createWriteStream(modelPath));
     console.log('Download completed.');
   } catch (err) {
     console.error('An error occurred:', err);

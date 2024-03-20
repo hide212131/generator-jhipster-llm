@@ -16,14 +16,13 @@ export default class extends BaseApplicationGenerator {
     return this.asPromptingTaskGroup({
       async promptingTemplateTask() {
         await this.prompt(
-          [
-            {
-              type: 'input',
-              name: 'llmModelName',
-              message: 'What is the name of the LLM model?',
-              default: 'mistral-7b-instruct-v0.2.Q2_K.gguf',
-            },
-          ],
+          {
+            type: 'list',
+            name: 'llmModelName',
+            message: 'Would you like to use a LLM model (https://ollama.com/library)?',
+            choices: retrieveModels(),
+            default: 'mistral',
+          },
           this.blueprintStorage,
         );
       },
@@ -33,6 +32,16 @@ export default class extends BaseApplicationGenerator {
   get [BaseApplicationGenerator.CONFIGURING]() {
     return this.asConfiguringTaskGroup({
       async configuringTemplateTask() {},
+    });
+  }
+
+  get [BaseApplicationGenerator.LOADING]() {
+    return this.asLoadingTaskGroup({
+      prepareForTemplates({ application }) {
+        const { llmModelName } = this.blueprintConfig;
+        application.llmModelUrl = retrieveModels().find(model => model.value === llmModelName).url;
+        application.llmModelName = application.llmModelUrl.split('/').pop();
+      },
     });
   }
 
@@ -123,7 +132,7 @@ export default class extends BaseApplicationGenerator {
             ),
         );
       },
-      async customizeApplicationYml() {
+      async customizeApplicationYml({ application: { llmModelName } }) {
         this.editFile(`src/main/resources/config/application-dev.yml`, { ignoreNonExisting: true }, content =>
           content
             .replace(
@@ -132,7 +141,7 @@ export default class extends BaseApplicationGenerator {
   ai:
     llama-cpp:
       model-home: '\${SPRING_AI_LLAMA_CPP_MODEL_HOME:models}'
-      model-name: '\${SPRING_AI_LLAMA_CPP_MODEL_NAME:mistral-7b-instruct-v0.2.Q2_K.gguf}'
+      model-name: '\${SPRING_AI_LLAMA_CPP_MODEL_NAME:${llmModelName}}'
     embedding:
       transformer:
         onnx.modelUri: '\${SPRING_AI_EMBEDDING_TRANSFORMER_ONNX_MODEL_URI:https://huggingface.co/intfloat/e5-small-v2/resolve/main/model.onnx}'
@@ -162,9 +171,11 @@ openapi.my-llm-app.base-path: /api/llm/v1
               ),
         );
       },
-      async cusomizeMaven({ source, application: { llmPomAdditions, buildToolMaven, reactive } }) {
+      async cusomizeMaven({ source, application: { llmPomAdditions, buildToolMaven, reactive, llmModelName, llmModelUrl } }) {
         if (buildToolMaven) {
           source.addMavenProperty?.(Object.entries(llmPomAdditions.properties).map(([property, value]) => ({ property, value })));
+          source.addMavenProperty?.({ property: 'llm.model.name', value: llmModelName });
+          source.addMavenProperty?.({ property: 'llm.model.url', value: llmModelUrl });
           source.addMavenRepository?.(llmPomAdditions.repositories);
           source.addMavenDependency?.(llmPomAdditions.dependencies);
           source.addMavenPlugin?.({ additionalContent: llmPomAdditions.buildPlugin });
@@ -204,3 +215,24 @@ openapi.my-llm-app.base-path: /api/llm/v1
     });
   }
 }
+
+const retrieveModels = () => {
+  return [
+    {
+      value: 'llama2',
+      name: 'Llama 2 (7B, 3.8GB)',
+      url: 'https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_0.gguf',
+    },
+    {
+      value: 'mistral',
+      name: 'Mistral (7B, 4.1GB)',
+      url: 'https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q4_0.gguf',
+    },
+    { value: 'phi', name: 'Phi-2 (2.7B, 1.7GB)', url: 'https://huggingface.co/TheBloke/phi-2-GGUF/resolve/main/phi-2.Q4_0.gguf' },
+    {
+      value: 'codellama',
+      name: 'Code Llama (7B, 3.8GB)',
+      url: 'https://huggingface.co/TheBloke/CodeLlama-7B-Instruct-GGUF/resolve/main/codellama-7b-instruct.Q4_0.gguf',
+    },
+  ];
+};

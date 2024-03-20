@@ -23,9 +23,7 @@
         <!-- Dependency versions -->
         <spring-ai.version>0.8.0</spring-ai.version>
         <java-llamacpp.version>2.3.5</java-llamacpp.version>
-        <model.home>${project.basedir}/models</model.home>
-        <integration.test.model>mistral-7b-instruct-v0.2.Q2_K.gguf</integration.test.model>
-        <integration.test.model.url>https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/${integration.test.model}</integration.test.model.url>
+        <llm.model.home>${project.basedir}/models</llm.model.home>
     </properties>
 
     <dependencyManagement>
@@ -81,15 +79,18 @@
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
+                <configuration>
+                    <skip>false</skip>
+                </configuration>                  
                 <executions>
                     <execution>
                         <id>Download the integration test model if it doesn't exist</id>
-                        <phase>integration-test</phase>
+                        <phase>generate-resources</phase>
                         <goals>
                             <goal>npm</goal>
                         </goals>
                         <configuration>
-                            <arguments>run llm:download-model -- ${model.home} ${integration.test.model} ${integration.test.model.url}</arguments>
+                            <arguments>run llm:download-model -- ${llm.model.home} ${llm.model.name} ${llm.model.url}</arguments>
                         </configuration>
                     </execution>
                 </executions>
