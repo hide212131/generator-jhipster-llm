@@ -1,7 +1,5 @@
 package com.mycompany.myapp.web.rest.chat;
 
-import com.mycompany.myapp.service.llm.LlamaCppChatClient;
-import com.mycompany.myapp.service.llm.LlamaPrompt;
 import com.mycompany.myapp.service.api.dto.*;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.annotation.Generated;
@@ -10,10 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.ai.chat.ChatResponse;
+import org.springframework.ai.chat.StreamingChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -30,10 +30,10 @@ import reactor.core.publisher.Mono;
 @RequestMapping("${openapi.my-llm-app.base-path:/v1}")
 public class ChatApiController implements ChatApi {
 
-    private final LlamaCppChatClient chatClient;
+    private final StreamingChatClient chatClient;
 
     @Autowired
-    public ChatApiController(LlamaCppChatClient chatClient) {
+    public ChatApiController(StreamingChatClient chatClient) {
         this.chatClient = chatClient;
     }
 
@@ -46,7 +46,7 @@ public class ChatApiController implements ChatApi {
     ) {
         return createChatCompletionRequestMono.flatMapMany(createChatCompletionRequest -> {
             var messages = createChatCompletionRequest.getMessages();
-            var prompt = new LlamaPrompt(
+            var prompt = new Prompt(
                 messages
                     .stream()
                     .map(message -> {

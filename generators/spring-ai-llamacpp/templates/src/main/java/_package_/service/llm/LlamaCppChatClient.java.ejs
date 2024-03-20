@@ -40,7 +40,7 @@ public class LlamaCppChatClient implements ChatClient, StreamingChatClient {
 
     @Override
     public ChatResponse call(Prompt prompt) {
-        LlamaModel.setLogger((level, message) -> System.out.print(message));
+        // LlamaModel.setLogger((level, message) -> System.out.print(message));
         var modelParams = new ModelParameters().setNGpuLayers(1);
         var inferParams = new InferenceParameters()
             .setTemperature(0.7f)
@@ -64,7 +64,7 @@ public class LlamaCppChatClient implements ChatClient, StreamingChatClient {
     @Override
     public Flux<ChatResponse> stream(Prompt prompt) {
         logger.info("generateStream: prompt={}", prompt.getContents());
-        LlamaModel.setLogger((level, message) -> System.out.print(message));
+        // LlamaModel.setLogger((level, message) -> System.out.print(message));
         var modelParams = new ModelParameters().setNGpuLayers(1);
         var inferParams = new InferenceParameters()
             .setTemperature(0.7f)
@@ -82,7 +82,7 @@ public class LlamaCppChatClient implements ChatClient, StreamingChatClient {
                     .fromIterable(model.generate(prompt.getContents(), inferParams))
                     .map(output -> {
                         var text = output.text;
-                        System.out.print(text);
+                        // System.out.print(text);
                         return new ChatResponse(List.of(new Generation(text)));
                     }),
             LlamaModel::close
