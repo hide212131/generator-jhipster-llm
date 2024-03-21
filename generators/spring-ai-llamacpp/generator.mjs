@@ -37,7 +37,7 @@ export default class extends BaseApplicationGenerator {
           {
             type: 'list',
             name: 'llmModelName',
-            message: 'Would you like to use a LLM model (https://ollama.com/library)?',
+            message: 'Would you like to use a LLM model?',
             choices: retrieveModels,
             default: 'mistral',
           },
