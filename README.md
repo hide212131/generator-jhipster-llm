@@ -10,9 +10,9 @@ This tool outputs the following code:
 
 - Code for a Spring Boot application server, including the development environment such as build tools (a feature of JHipster)
 - Code for an OpenAI API compatible server
-    - Code for the OpenAI Chat Completions API using OpenAPI Generator
+    - Code for the [OpenAI Chat Completions API](https://platform.openai.com/docs/api-reference/chat) using [OpenAPI spec](https://github.com/openai/openai-openapi) and [OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator)
         - Depending on whether the user selects Flux or Spring MVC, it outputs code for chat responses using Server-Sent Events for streaming
-- Code using the LLM library supported by Spring AI. Currently, it supports the following:
+- Code using the LLM library supported by [Spring AI](https://docs.spring.io/spring-ai/reference/). Currently, it supports the following:
     - [Ollama](https://ollama.com/)
     - [Java Bindings for Llama.cpp](https://github.com/kherud/java-llama.cpp)
 - Download of the selected LLM model
