@@ -61,6 +61,8 @@ Execute the following to start Spring Boot. The necessary LLM model will be down
 After starting, access the following URL. The chat application will be displayed.
 [http://localhost:8080/chat-ui/index.html](http://localhost:8080/chat-ui/index.html)
 
+When you open the BetterChatGPT screen, open the API menu,check `Use custom API endpoint`, and enter `http://localhost:8080/api/llm/v1/chat/completions` in the API Endpoint.
+
 Try typing something. Congratulations if you get a response! Enjoy building applications with LLM and Java!
 
 # Note when choosing Ollama
