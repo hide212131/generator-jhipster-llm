@@ -1,14 +1,27 @@
 {
   "name": "generator-jhipster-llm",
-  "version": "0.0.0",
-  "private": true,
-  "description": "Description for Llm",
+  "version": "0.0.1",
+  "description": "JHipster Blueprint for Generating LLM Code",
   "keywords": [
     "yeoman-generator",
     "jhipster-blueprint",
-    "jhipster-8"
+    "jhipster-8",
+    "llm"
   ],
-  "license": "UNLICENSED",
+  "homepage": "https://github.com/hide212131/generator-jhipster-llm",
+  "bugs": {
+    "url": "https://github.com/hide212131/generator-jhipster-llm/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hide212131/generator-jhipster-llm.git"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Hideyuki Kagami",
+    "email": "hide212131@gmail.com",
+    "url": "https://github.com/hide212131"
+  },
   "type": "module",
   "bin": {
     "jhipster-llm": "cli/cli.cjs"
