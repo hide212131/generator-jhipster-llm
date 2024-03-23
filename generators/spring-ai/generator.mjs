@@ -158,7 +158,7 @@ openapi.my-llm-app.base-path: /api/llm/v1
       async customizeBuildTool({ source, application: { buildToolMaven, buildToolGradle, javaDependencies, reactive } }) {
         // add required third party dependencies
         if (buildToolMaven) {
-          source.addMavenProperty?.({ property: 'spring-ai.version', value: javaDependencies['spring-ai'] });
+          source.addMavenProperty?.({ property: 'springAi.version', value: javaDependencies['springAi'] });
           source.addMavenRepository?.([
             {
               id: 'spring-milestones',
@@ -174,7 +174,7 @@ openapi.my-llm-app.base-path: /api/llm/v1
           source.addMavenDependency?.({
             groupId: 'org.springframework.ai',
             artifactId: 'spring-ai-core',
-            version: '${spring-ai.version}',
+            version: '${springAi.version}',
           });
           this.editFile(`pom.xml`, content => {
             if (content.includes('<artifactId>openapi-generator-maven-plugin</artifactId>')) {
@@ -196,7 +196,40 @@ openapi.my-llm-app.base-path: /api/llm/v1
             return content;
           });
         } else if (buildToolGradle) {
-          // TODO
+          source.addGradleProperty?.({ property: 'springAiVersion', value: javaDependencies['springAi'] });
+          [
+            {
+              id: 'spring-milestones',
+              name: 'Spring Milestones',
+              url: 'https://repo.spring.io/milestone',
+            },
+            {
+              id: 'spring-snapshots',
+              name: 'Spring Snapshots',
+              url: 'https://repo.spring.io/snapshot',
+            },
+          ].forEach(repo => source.addGradleMavenRepository?.(repo));
+          source.addGradleDependency?.({
+            groupId: 'org.springframework.ai',
+            artifactId: 'spring-ai-core',
+            version: '${springAiVersion}',
+            scope: 'implementation',
+          });
+          this.editFile(`gradle/swagger.gradle`, { ignoreNonExisting: true }, content => {
+            content = content.replace(
+              'openApiGenerate {',
+              `openApiGenerate {
+    typeMappings = [
+        "integer": "Long",
+        "int"    : "Long"
+    ]`,
+            );
+            content = content.replace(
+              'configOptions = [',
+              `configOptions = [interfaceOnly: "true", openApiNullable: "false", ${!reactive ? 'reactive: "true", ' : ''}`, // for chat stream
+            );
+            return content;
+          });
         }
       },
     });

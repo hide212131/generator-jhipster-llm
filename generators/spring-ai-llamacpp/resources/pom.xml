@@ -8,7 +8,7 @@
 
     <properties>
         <!-- Dependency versions -->
-        <java-llamacpp.version>2.3.5</java-llamacpp.version>
+        <javaLlamacpp.version>2.3.5</javaLlamacpp.version>
     </properties>
 
     <dependencyManagement>
@@ -16,7 +16,7 @@
             <dependency>
                 <groupId>de.kherud</groupId>
                 <artifactId>llama</artifactId>
-                <version>${java-llamacpp.version}</version>
+                <version>${javaLlamacpp.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

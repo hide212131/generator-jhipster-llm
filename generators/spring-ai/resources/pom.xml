@@ -8,8 +8,7 @@
 
     <properties>
         <!-- Dependency versions -->
-        <spring-ai.version>0.8.0</spring-ai.version>
-        <java-llamacpp.version>2.3.5</java-llamacpp.version>
+        <springAi.version>0.8.0</springAi.version>
     </properties>
 
     <dependencyManagement>
@@ -17,12 +16,7 @@
             <dependency>
               <groupId>org.springframework.ai</groupId>
               <artifactId>spring-ai-core</artifactId>
-              <version>${spring-ai.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>de.kherud</groupId>
-                <artifactId>llama</artifactId>
-                <version>${java-llamacpp.version}</version>
+              <version>${springAi.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

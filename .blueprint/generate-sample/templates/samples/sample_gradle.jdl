@@ -1,0 +1,10 @@
+application {
+  config {    
+    applicationType monolith
+    buildTool gradle
+    databaseType no
+    clientFramework react
+    enableSwaggerCodegen true
+    cacheProvider no
+  }
+}

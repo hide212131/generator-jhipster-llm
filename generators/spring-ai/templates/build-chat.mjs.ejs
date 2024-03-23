@@ -6,7 +6,7 @@ async function buildChat() {
   try {
     const rootDir = process.cwd();
     // Ensure the target/better-chat directory exists
-    const targetDir = path.join(rootDir, 'target', 'better-chat');
+    const targetDir = path.join(rootDir, '<%= this.relativeDir(clientRootDir, temporaryDir) %>', 'better-chat');
     // Clear the directory if it exists
     fs.emptyDirSync(targetDir);
 
@@ -22,7 +22,7 @@ async function buildChat() {
 
     // Copy dist/ to target/classes/static/chat-ui
     const distDir = path.join(targetDir, 'dist');
-    const staticDir = path.join(rootDir, 'target/classes/static/chat-ui');
+    const staticDir = path.join(rootDir, '<%= this.relativeDir(clientRootDir, clientDistDir) %>chat-ui');
     fs.copySync(distDir, staticDir);
   } catch (error) {
     console.error(`Error occurred: ${error.message}`);

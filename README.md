@@ -24,7 +24,6 @@ In the near future, we plan to support:
 - RAG support using VectorDB
 - [Langchain for Java](https://github.com/langchain4j/langchain4j) support
 - Other Chat UI support
-- gradle
 
 # Prerequisites
 - Java 17 or later
@@ -46,7 +45,7 @@ If you want to create the simplest application, execute the following command. A
 ```bash
 mkdir myLlmApp
 cd myLlmApp
-jhipster-llm generate-sample sample.jdl
+jhipster-llm generate-sample sample.jdl # This is for maven. For gradle, please use 'sample_gradle.jdl' instead.
 ```
 (Note: Currently, only the minimal JHipster application configuration written in `.blueprint/generate-sample/templates/samples/sample.jdl` is supported. We plan to support various other configurations in the future.)
 

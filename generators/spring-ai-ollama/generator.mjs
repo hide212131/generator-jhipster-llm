@@ -50,6 +50,10 @@ export default class extends BaseApplicationGenerator {
                 path: 'src/main/docker',
                 templates: ['ollama.yml'],
               },
+              {
+                condition: generator => generator.buildToolGradle,
+                templates: ['gradle/llm.gradle'],
+              },
             ],
           },
           context: application,
@@ -61,22 +65,13 @@ export default class extends BaseApplicationGenerator {
 
   get [BaseApplicationGenerator.POST_WRITING]() {
     return this.asPostWritingTaskGroup({
-      async customizeDockerServices() {
-        this.editFile(`src/main/docker/services.yml`, { ignoreNonExisting: true }, contents =>
-          contents.replace(
-            '\nservices:',
-            `\nservices:
-  ollama:
-    extends:
-      file: ./ollama.yml
-      service: ollama
-  `,
-          ),
-        );
+      async customizeDockerServices({ source }) {
+        source.addDockerExtendedServiceToApplicationAndServices({ serviceName: 'ollama' });
       },
-      async customizePackageJson() {
+      async customizePackageJson({ application }) {
         this.packageJson.merge({
           scripts: {
+            'services:up': `docker compose -f ${application.dockerServicesDir}services.yml up --wait`,
             'llm:ollama': 'docker exec -i ollama ollama',
           },
         });
@@ -93,13 +88,13 @@ export default class extends BaseApplicationGenerator {
           ),
         );
       },
-      async customizeBuildTool({ source, application: { buildToolMaven, llmModelName } }) {
+      async customizeBuildTool({ source, application: { buildToolMaven, buildToolGradle, llmModelName } }) {
         if (buildToolMaven) {
           source.addMavenProperty?.({ property: 'llm.model.name', value: llmModelName });
           source.addMavenDependency?.({
             groupId: 'org.springframework.ai',
             artifactId: 'spring-ai-ollama-spring-boot-starter',
-            version: '${spring-ai.version}',
+            version: '${springAi.version}',
           });
           source.addMavenPlugin?.({
             additionalContent: `
@@ -122,6 +117,15 @@ export default class extends BaseApplicationGenerator {
             </executions>
           `,
           });
+        } else if (buildToolGradle) {
+          source.addGradleProperty?.({ property: 'llm.model.name', value: llmModelName });
+          source.addGradleDependency?.({
+            groupId: 'org.springframework.ai',
+            artifactId: 'spring-ai-ollama-spring-boot-starter',
+            version: '${springAiVersion}',
+            scope: 'implementation',
+          });
+          source.applyFromGradle?.({ script: 'gradle/llm.gradle' });
         }
       },
     });

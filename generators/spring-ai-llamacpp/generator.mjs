@@ -18,6 +18,10 @@ export default class extends BaseApplicationGenerator {
           ...versions,
         });
       },
+      loadDependabot() {
+        const { devDependencies } = this.fs.readJSON(this.templatePath('../resources/package.json'));
+        this.addDevDependencies = devDependencies;
+      },
     });
   }
 
@@ -72,6 +76,10 @@ export default class extends BaseApplicationGenerator {
                   'service/llm/LlamaCppChatClient.java',
                 ],
               },
+              {
+                condition: generator => generator.buildToolGradle,
+                templates: ['gradle/llm.gradle'],
+              },
             ],
           },
           context: application,
@@ -83,6 +91,11 @@ export default class extends BaseApplicationGenerator {
 
   get [BaseApplicationGenerator.POST_WRITING]() {
     return this.asPostWritingTaskGroup({
+      async customizePackageJson() {
+        this.packageJson.merge({
+          devDependencies: this.addDevDependencies,
+        });
+      },
       async customizeApplicationYml({ application: { llmModelName } }) {
         this.editFile(`src/main/resources/config/application-dev.yml`, { ignoreNonExisting: true }, content =>
           content.replace(
@@ -99,16 +112,18 @@ export default class extends BaseApplicationGenerator {
           ),
         );
       },
-      async customizeBuildTool({ source, application: { buildToolMaven, javaDependencies, llmModelName, llmModelUrl } }) {
+      async customizeBuildTool({ source, application: { buildToolMaven, buildToolGradle, javaDependencies, llmModelName, llmModelUrl } }) {
         if (buildToolMaven) {
-          source.addMavenProperty?.({ property: 'java-llamacpp.version', value: javaDependencies['java-llamacpp'] });
-          source.addMavenProperty?.({ property: 'llm.model.home', value: '${project.basedir}/models' });
-          source.addMavenProperty?.({ property: 'llm.model.name', value: llmModelName });
-          source.addMavenProperty?.({ property: 'llm.model.url', value: llmModelUrl });
+          source.addMavenProperty?.([
+            { property: 'javaLlamacpp.version', value: javaDependencies['javaLlamacpp'] },
+            { property: 'llm.model.home', value: 'models' },
+            { property: 'llm.model.name', value: llmModelName },
+            { property: 'llm.model.url', value: llmModelUrl },
+          ]);
           source.addMavenDependency?.({
             groupId: 'de.kherud',
             artifactId: 'llama',
-            version: '${java-llamacpp.version}',
+            version: '${javaLlamacpp.version}',
           });
           source.addMavenPlugin?.({
             additionalContent: `
@@ -125,12 +140,26 @@ export default class extends BaseApplicationGenerator {
                         <goal>npm</goal>
                     </goals>
                     <configuration>
-                        <arguments>run llm:download-model -- \${llm.model.home} \${llm.model.name} \${llm.model.url}</arguments>
+                        <arguments>run llm:download-model -- \${project.basedir}/\${llm.model.home} \${llm.model.name} \${llm.model.url}</arguments>
                     </configuration>
                 </execution>
             </executions>
           `,
           });
+        } else if (buildToolGradle) {
+          [
+            { property: 'javaLlamacppVersion', value: javaDependencies['javaLlamacpp'] },
+            { property: 'llm.model.home', value: 'models' },
+            { property: 'llm.model.name', value: llmModelName },
+            { property: 'llm.model.url', value: llmModelUrl },
+          ].forEach(({ property, value }) => source.addGradleProperty?.({ property, value }));
+          source.addGradleDependency?.({
+            groupId: 'de.kherud',
+            artifactId: 'llama',
+            version: '${javaLlamacppVersion}',
+            scope: 'implementation',
+          });
+          source.applyFromGradle?.({ script: 'gradle/llm.gradle' });
         }
       },
     });
