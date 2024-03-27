@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`SubGenerator app of llm JHipster blueprint > run > should succeed 1`] = `
+exports[`SubGenerator llm of llm JHipster blueprint > run > should succeed 1`] = `
 {
   ".devcontainer/Dockerfile": {
     "stateCleared": "modified",
@@ -96,6 +96,9 @@ exports[`SubGenerator app of llm JHipster blueprint > run > should succeed 1`] =
     "stateCleared": "modified",
   },
   "src/main/docker/monitoring.yml": {
+    "stateCleared": "modified",
+  },
+  "src/main/docker/ollama.yml": {
     "stateCleared": "modified",
   },
   "src/main/docker/postgresql.yml": {

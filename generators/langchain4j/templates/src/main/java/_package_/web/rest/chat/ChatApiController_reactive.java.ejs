@@ -1,0 +1,98 @@
+package <%= packageName %>.web.rest.chat;
+
+import <%= packageName %>.service.api.dto.*;
+import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.annotation.Generated;
+import jakarta.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.ai.chat.ChatResponse;
+import org.springframework.ai.chat.StreamingChatClient;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-01-08T22:40:49.631444+09:00[Asia/Tokyo]")
+@RestController
+@RequestMapping("${openapi.my-llm-app.base-path:/v1}")
+public class ChatApiController implements ChatApi {
+
+    private final StreamingChatClient chatClient;
+
+    @Autowired
+    public ChatApiController(StreamingChatClient chatClient) {
+        this.chatClient = chatClient;
+    }
+
+    @Override
+    public Flux<CreateChatCompletionStreamResponse> createChatCompletion(
+        @Parameter(name = "CreateChatCompletionRequest", description = "", required = true) @Valid @RequestBody Mono<
+            CreateChatCompletionRequest
+        > createChatCompletionRequestMono,
+        @Parameter(hidden = true) final ServerWebExchange exchange
+    ) {
+        return createChatCompletionRequestMono.flatMapMany(createChatCompletionRequest -> {
+            var messages = createChatCompletionRequest.getMessages();
+            var prompt = new Prompt(
+                messages
+                    .stream()
+                    .map(message -> {
+                        if (message instanceof ChatCompletionRequestSystemMessage systemMessage) {
+                            return (Message) new SystemMessage(systemMessage.getContent());
+                        } else if (message instanceof ChatCompletionRequestUserMessage userMessage) {
+                            return (Message) new UserMessage(userMessage.getContent());
+                        } else if (message instanceof ChatCompletionRequestAssistantMessage assistantMessage) {
+                            return (Message) new AssistantMessage(assistantMessage.getContent());
+                        } else {
+                            throw new RuntimeException("Unknown message type");
+                        }
+                    })
+                    .toList()
+            );
+
+            Flux<ChatResponse> chatResponseFlux = chatClient.stream(prompt);
+            var date = System.currentTimeMillis();
+            return chatResponseFlux
+                .map(chatResponse -> {
+                    var responseDelta = new ChatCompletionStreamResponseDelta()
+                        .content(chatResponse.getResult().getOutput().getContent())
+                        .role(ChatCompletionStreamResponseDelta.RoleEnum.ASSISTANT);
+                    var choices = new CreateChatCompletionStreamResponseChoicesInner().index(0L).finishReason(null).delta(responseDelta);
+                    return new CreateChatCompletionStreamResponse(
+                        "chatcmpl-123",
+                        List.of(choices),
+                        date,
+                        "gpt-3.5-turbo",
+                        CreateChatCompletionStreamResponse.ObjectEnum.CHAT_COMPLETION_CHUNK
+                    );
+                })
+                .concatWithValues(
+                    new CreateChatCompletionStreamResponse(
+                        "chatcmpl-123",
+                        List.of(
+                            new CreateChatCompletionStreamResponseChoicesInner()
+                                .index(0L)
+                                .finishReason(CreateChatCompletionStreamResponseChoicesInner.FinishReasonEnum.STOP)
+                                .delta(new ChatCompletionStreamResponseDelta())
+                        ),
+                        date,
+                        "gpt-3.5-turbo",
+                        CreateChatCompletionStreamResponse.ObjectEnum.CHAT_COMPLETION_CHUNK
+                    )
+                );
+        });
+    }
+}
