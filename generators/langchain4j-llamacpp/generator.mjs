@@ -1,4 +1,5 @@
 import BaseApplicationGenerator from 'generator-jhipster/generators/base-application';
+import { javaMainPackageTemplatesBlock } from 'generator-jhipster/generators/java/support';
 import command from './command.mjs';
 export default class extends BaseApplicationGenerator {
   async beforeQueue() {
@@ -14,6 +15,29 @@ export default class extends BaseApplicationGenerator {
     });
   }
 
+  get [BaseApplicationGenerator.WRITING]() {
+    return this.asWritingTaskGroup({
+      async writingTemplateTask({ application }) {
+        await this.writeFiles({
+          sections: {
+            llm: [
+              {
+                ...javaMainPackageTemplatesBlock(),
+                templates: [
+                  'config/LlamaCppAutoConfiguration.java',
+                  'config/LlamaCppProperties.java',
+                  'service/llm/LlamaCppHelper.java',
+                  'service/llm/LlamaCppStreamingChatModel.java',
+                ],
+              },
+            ],
+          },
+          context: application,
+        });
+      },
+    });
+  }
+
   get [BaseApplicationGenerator.POST_WRITING]() {
     return this.asPostWritingTaskGroup({
       async customizeApplicationYml({ application: { llmModelName } }) {
@@ -21,17 +45,10 @@ export default class extends BaseApplicationGenerator {
           content.replace(
             '\n# application:',
             `\n# application:
-langchain4j:
-  ollama:
-    chat-model:
-      model-name: ${llmModelName}
-      base-url: http://localhost:11434
-    streaming-chat-model:
-      model-name: ${llmModelName}
-      base-url: http://localhost:11434
-    language-model:
-      model-name: ${llmModelName}
-      base-url: http://localhost:11434
+langchain4j:  
+  llama-cpp:
+    model-home: '\${LANGCHAIN4J_LLAMA_CPP_MODEL_HOME:models}'
+    model-name: '\${LANGCHAIN4J_LLAMA_CPP_MODEL_NAME:${llmModelName}}'
 `,
           ),
         );

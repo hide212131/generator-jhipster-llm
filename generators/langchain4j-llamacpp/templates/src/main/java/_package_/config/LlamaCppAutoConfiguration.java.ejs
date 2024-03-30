@@ -1,0 +1,25 @@
+package <%= packageName %>.config;
+
+import <%= packageName %>.service.llm.LlamaCppStreamingChatModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.nio.file.Path;
+
+@Configuration
+@EnableConfigurationProperties(LlamaCppProperties.class)
+public class LlamaCppAutoConfiguration {
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    @Bean
+    @ConditionalOnProperty(prefix = "langchain4j.llama-cpp", name = {"model-home", "model-name"})
+    LlamaCppStreamingChatModel llamaCppStreamingChatModel(LlamaCppProperties properties) {
+        logger.info("LlamaCppStreamingChatModel created: model={}", Path.of(properties.getModelHome(), properties.getModelName()));
+        return new LlamaCppStreamingChatModel(properties.getModelHome(), properties.getModelName());
+    }
+}

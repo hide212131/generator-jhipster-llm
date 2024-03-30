@@ -1,0 +1,56 @@
+package <%= packageName %>.service.llm;
+
+import de.kherud.llama.InferenceParameters;
+import de.kherud.llama.LlamaModel;
+import de.kherud.llama.ModelParameters;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.output.Response;
+
+import java.nio.file.Path;
+import java.util.List;
+
+import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
+import static dev.langchain4j.internal.ValidationUtils.ensureNotEmpty;
+
+
+public class LlamaCppStreamingChatModel implements StreamingChatLanguageModel {
+
+    private final String modelHome;
+    private final String modelName;
+
+    public LlamaCppStreamingChatModel(String modelHome, String modelName) {
+        this.modelHome = ensureNotBlank(modelHome, "modelHome");
+        this.modelName = ensureNotBlank(modelName, "modelName");
+        // log.info("LlamaCppStreamingChatModel created: model={}", Path.of(modelHome, modelName));
+    }
+
+    @Override
+    public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
+        ensureNotEmpty(messages, "messages");
+
+        String prompt = LlamaCppHelper.generatePrompt(messages);
+        var modelParams = new ModelParameters().setNGpuLayers(1);
+        var inferParams = new InferenceParameters()
+            .setTemperature(0.7f)
+            .setPenalizeNl(true)
+            .setMirostat(InferenceParameters.MiroStat.V2)
+            .setAntiPrompt("User:");
+
+        var modelPath = Path.of(modelHome, modelName).toString();
+
+        var contentBuilder = new StringBuilder();
+        try (var model = new LlamaModel(modelPath, modelParams)) {
+            Iterable<LlamaModel.Output> outputs = model.generate(prompt, inferParams);
+            for (LlamaModel.Output output : outputs) {
+                handler.onNext(output.text);
+                contentBuilder.append(output.text);
+            }
+            handler.onComplete(Response.from(AiMessage.from(contentBuilder.toString())));
+        } catch (Exception e) {
+            handler.onError(e);
+        }
+    }
+}

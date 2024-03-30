@@ -1,0 +1,39 @@
+package <%= packageName %>.service.llm;
+
+import dev.langchain4j.data.message.*;
+
+import java.util.List;
+
+public class LlamaCppHelper {
+
+    public static String generatePrompt(List<ChatMessage> messages) {
+        var sb = new StringBuilder();
+        var systemMessage = messages
+            .stream()
+            .filter(m -> m.type() == ChatMessageType.SYSTEM)
+            .map(m -> (SystemMessage) m)
+            .reduce((first, second) -> second)
+            .orElseThrow();
+        var userMessages = messages.stream().filter(m -> m.type() == ChatMessageType.USER).map(m -> (UserMessage) m).toList();
+        var assistantMessages = messages.stream().filter(m -> m.type() == ChatMessageType.AI).map(m -> (AiMessage) m).toList();
+
+        for (int i = 0; i < userMessages.size(); i++) {
+            var userMessage = userMessages.get(i);
+            var assistantMessage = i < assistantMessages.size() ? assistantMessages.get(i) : null;
+
+            sb.append("<s>");
+            if (i == 0) {
+                sb.append("<<SYS>>\n").append(systemMessage.text()).append("\n<</SYS>>");
+            }
+            sb.append("[INST]");
+            sb.append(userMessage.contents());
+            sb.append("[/INST] ");
+            sb.append(assistantMessage != null ? assistantMessage.text() : "");
+
+            if (i < userMessages.size() - 1) {
+                sb.append(" </s>");
+            }
+        }
+        return sb.toString();
+    }
+}

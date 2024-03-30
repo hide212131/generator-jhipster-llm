@@ -84,19 +84,37 @@ export default class extends BaseApplicationGenerator {
 
   get [BaseApplicationGenerator.POST_WRITING]() {
     return this.asPostWritingTaskGroup({
-      async customizePackageJson() {
-        this.packageJson.merge({
-          scripts: {
-            'llm:download-model': 'node models/download-model.mjs',
-          },
-        });
-      },
       async customizeBuildTool({ source, application: { buildToolMaven, buildToolGradle, javaDependencies } }) {
-        // add required third party dependencies
         if (buildToolMaven) {
           source.addMavenProperty?.({ property: 'langchain4j.version', value: javaDependencies['langchain4j'] });
+          source.addMavenDependency?.([
+            {
+              groupId: 'dev.langchain4j',
+              artifactId: 'langchain4j',
+              version: '${langchain4j.version}',
+            },
+            {
+              groupId: 'dev.langchain4j',
+              artifactId: 'langchain4j-ollama-spring-boot-starter',
+              version: '${langchain4j.version}',
+            },
+          ]);
         } else if (buildToolGradle) {
           source.addGradleProperty?.({ property: 'langchain4jVersion', value: javaDependencies['langchain4j'] });
+          [
+            {
+              groupId: 'dev.langchain4j',
+              artifactId: 'langchain4j',
+              version: '${langchain4j.version}',
+              scope: 'implementation',
+            },
+            {
+              groupId: 'dev.langchain4j',
+              artifactId: 'langchain4j-ollama-spring-boot-starter',
+              version: '${langchain4j.version}',
+              scope: 'implementation',
+            },
+          ].forEach(dependency => source.addGradleDependency?.(dependency));
         }
       },
     });
