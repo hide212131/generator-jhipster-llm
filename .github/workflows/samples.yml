@@ -34,7 +34,7 @@ permissions:
   contents: read
 jobs:
   applications:
-    name: ${{ matrix.llm-model-name }} ${{ matrix.llm-library }} ${{ matrix.llm-framework }} ${{ matrix.reactive }} ${{ matrix.build-tool }}) ${{ matrix.suite }} (${{ matrix.os }}
+    name: ${{ matrix.llm-library }} ${{ matrix.llm-framework }} ${{ matrix.build-tool }}${{ matrix.reactive && '' reactive'' || '''' }} 
     runs-on: ${{ matrix.os }}
     defaults:
       run:
