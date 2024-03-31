@@ -102,26 +102,21 @@ export default class extends BaseApplicationGenerator {
             artifactId: 'llama',
             version: '${javaLlamacpp.version}',
           });
-          source.addMavenPlugin?.({
-            additionalContent: `
-            <groupId>com.github.eirslett</groupId>
-            <artifactId>frontend-maven-plugin</artifactId>
-            <configuration>
-                <skip>false</skip>
-            </configuration>                  
-            <executions>
-                <execution>
-                    <id>Download the integration test model if it doesn't exist</id>
-                    <phase>generate-resources</phase>
-                    <goals>
-                        <goal>npm</goal>
-                    </goals>
-                    <configuration>
-                        <arguments>run llm:download-model -- \${project.basedir}/\${llm.model.home} \${llm.model.name} \${llm.model.url}</arguments>
-                    </configuration>
-                </execution>
-            </executions>
-          `,
+          this.editFile(`pom.xml`, content => {
+            return content.replace(
+              /(<profile>\s*<id>webapp<\/id>[\s\S]*?<artifactId>frontend-maven-plugin<\/artifactId>[\s\S]*?<\/execution>)(\s*<\/executions>)/,
+              `$1
+                            <execution>
+                                <id>Download the integration test model if it doesn't exist</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>run llm:download-model -- \${project.basedir}/\${llm.model.home} \${llm.model.name} \${llm.model.url}</arguments>
+                                </configuration>
+                            </execution>$2`,
+            );
           });
         } else if (buildToolGradle) {
           [
