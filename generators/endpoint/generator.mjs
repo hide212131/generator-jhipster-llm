@@ -160,14 +160,12 @@ openapi.my-llm-app.base-path: /api/llm/v1
           // for openai api compilation if not reactive
           if (!reactive) {
             source.addGradleProperty?.({ property: 'reactorVersion', value: javaDependencies['reactor'] });
-            source.addGradleDependency?.([
-              {
-                groupId: 'io.projectreactor',
-                artifactId: 'reactor-core',
-                version: '${reactor.version}',
-                scope: 'implementation',
-              },
-            ]);
+            source.addGradleDependency?.({
+              groupId: 'io.projectreactor',
+              artifactId: 'reactor-core',
+              version: '${reactorVersion}',
+              scope: 'implementation',
+            });
           }
           this.editFile(`gradle/swagger.gradle`, { ignoreNonExisting: true }, content => {
             content = content.replace(

@@ -105,13 +105,13 @@ export default class extends BaseApplicationGenerator {
             {
               groupId: 'dev.langchain4j',
               artifactId: 'langchain4j',
-              version: '${langchain4j.version}',
+              version: '${langchain4jVersion}',
               scope: 'implementation',
             },
             {
               groupId: 'dev.langchain4j',
               artifactId: 'langchain4j-ollama-spring-boot-starter',
-              version: '${langchain4j.version}',
+              version: '${langchain4jVersion}',
               scope: 'implementation',
             },
           ].forEach(dependency => source.addGradleDependency?.(dependency));
