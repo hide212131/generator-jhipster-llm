@@ -1,0 +1,114 @@
+#
+# Copyright 2013-2022 the original author or authors from the JHipster project.
+#
+# This file is part of the JHipster project, see https://www.jhipster.tech/
+# for more information.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+name: JDL tests
+concurrency:
+  # Group PRs by head_ref, push to main branch by commit id, and others branch by ref.
+  group: ${{ github.workflow }}-${{ github.head_ref || (github.ref == 'refs/heads/main' && github.sha) || github.ref }}
+  cancel-in-progress: true
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    types: [closed, opened, synchronize, reopened]
+    branches:
+      - '*'
+permissions:
+  contents: read
+jobs:
+  applications:
+    name: ${{ matrix.llm-model-name }} ${{ matrix.llm-library }} ${{ matrix.llm-framework }} ${{ matrix.reactive }} ${{ matrix.build-tool }}) ${{ matrix.suite }} (${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ github.workspace }}/app
+    if: github.event.action != 'closed'
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04]
+        build-tool: [maven, gradle]
+        reactive: [false, true]
+        llm-framework: [springai, langchain4j]
+        llm-library: [llamacpp, ollama]
+        llm-model-name: [mistral]
+        suite:
+          - sample
+    steps:
+      #----------------------------------------------------------------------
+      # Install all tools and check configuration
+      #----------------------------------------------------------------------
+      - uses: jhipster/actions/create-app-path@v0
+      - uses: jhipster/actions/setup-git@v0
+      - name: 'SETUP: checkout generator-jhipster-llm'
+        uses: actions/checkout@v4
+        with:
+          path: generator-jhipster-llm
+          fetch-depth: 2
+      - name: 'SETUP: setup node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: 'SETUP: install generator-jhipster-llm'
+        run: |
+          npm ci
+          npm link
+        working-directory: ${{ github.workspace }}/generator-jhipster-llm
+      - name: 'SETUP: get date'
+        id: get-date
+        run: echo "::set-output name=date::$(/bin/date -u "+%Y%m%d")"
+      - name: 'SETUP: load cache'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/.cache/Cypress/
+            ~/.m2/repository
+          key: ${{ runner.os }}-app-${{ matrix.suite }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('generator-jhipster-llm/package*.json') }}
+      #----------------------------------------------------------------------
+      # Install JHipster and generate project+entities
+      #----------------------------------------------------------------------
+      - name: 'PROJECT: generate'
+        run: 'jhipster-llm generate-sample ${{ matrix.suite }} --build ${{ matrix.build-tool }} ${{ matrix.reactive && ''--reactive'' || '''' }} --llm-framework ${{ matrix.llm-framework }} --llm-library ${{ matrix.llm-library }} --llm-model-name ${{ matrix.llm-model-name }} --no-insight --skip-commit-hook --skip-jhipster-dependencies'
+      - uses: jhipster/actions/compare-sample@v0
+        with:
+          generator-path: generator-jhipster-llm
+          cmd: 'jhipster-llm generate-sample ${{ matrix.suite }} --build ${{ matrix.build-tool }}  ${{ matrix.reactive && ''--reactive'' || '''' }} --llm-framework ${{ matrix.llm-framework }} --llm-library ${{ matrix.llm-library }} --llm-model-name ${{ matrix.llm-model-name }} --no-insight --skip-git --skip-commit-hook --skip-jhipster-dependencies --skip-install'
+      - name: 'TESTS: build test'
+        run: npm run java:jar:dev
+  check-applications:
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest
+    needs: [applications]
+    if: always()
+    steps:
+      - run: |
+          echo '${{ toJSON(needs) }}'
+          if [ 'skipped' == '${{ needs.applications.result }}' ] || [ 'success' == '${{ needs.applications.result }}' ] || [ 'closed' == '${{ github.event.action }}' ]; then
+            exit 0
+          fi
+          exit 1
