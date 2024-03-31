@@ -1,6 +1,0 @@
-{
-  "devDependencies": {
-    "node-fetch": "3.3.2",
-    "readable-stream": "4.5.2"
-  }
-}

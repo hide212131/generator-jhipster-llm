@@ -1,9 +1,0 @@
-node {
-    download = true
-}
-
-task downloadLLMModel(type: NpmTask) {
-    args = ['run', 'llm:download-model', '--', "${projectDir}/${project.findProperty('llm.model.home')}", project.findProperty('llm.model.name'), project.findProperty('llm.model.url')]
-}
-
-processResources.dependsOn downloadLLMModel

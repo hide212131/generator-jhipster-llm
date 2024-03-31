@@ -1,6 +1,0 @@
-<&_ if (!fragment.section) { -&>
-######################
-# LLM Models
-######################
-/src/main/docker/ollama
-<&_ } -&>

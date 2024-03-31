@@ -1,28 +1,9 @@
 import BaseApplicationGenerator from 'generator-jhipster/generators/base-application';
 import { javaMainPackageTemplatesBlock } from 'generator-jhipster/generators/java/support';
 import command from './command.mjs';
-import { getPomVersionProperties } from 'generator-jhipster/generators/server/support';
 export default class extends BaseApplicationGenerator {
   async beforeQueue() {
     await this.dependsOnJHipster('jhipster-llm:spring-ai');
-  }
-
-  get [BaseApplicationGenerator.PREPARING]() {
-    return this.asPreparingTaskGroup({
-      async defaultTask({ application }) {
-        const pomFile = this.readTemplate(this.templatePath('../resources/pom.xml'));
-        // TODO use application.javaDependencies
-        const versions = getPomVersionProperties(pomFile);
-        application.javaDependencies = this.prepareDependencies({
-          ...application.javaDependencies,
-          ...versions,
-        });
-      },
-      loadDependabot() {
-        const { devDependencies } = this.fs.readJSON(this.templatePath('../resources/package.json'));
-        this.addDevDependencies = devDependencies;
-      },
-    });
   }
 
   get [BaseApplicationGenerator.INITIALIZING]() {
@@ -30,33 +11,6 @@ export default class extends BaseApplicationGenerator {
       async initializingTemplateTask() {
         this.parseJHipsterArguments(command.arguments);
         this.parseJHipsterOptions(command.options);
-      },
-    });
-  }
-
-  get [BaseApplicationGenerator.PROMPTING]() {
-    return this.asPromptingTaskGroup({
-      async promptingTemplateTask() {
-        await this.prompt(
-          {
-            type: 'list',
-            name: 'llmModelName',
-            message: 'Would you like to use a LLM model?',
-            choices: retrieveModels,
-            default: 'mistral',
-          },
-          this.blueprintStorage,
-        );
-      },
-    });
-  }
-
-  get [BaseApplicationGenerator.LOADING]() {
-    return this.asLoadingTaskGroup({
-      prepareForTemplates({ application }) {
-        const { llmModelName } = this.blueprintConfig;
-        application.llmModelUrl = retrieveModels.find(model => model.value === llmModelName).url;
-        application.llmModelName = application.llmModelUrl.split('/').pop();
       },
     });
   }
@@ -76,26 +30,16 @@ export default class extends BaseApplicationGenerator {
                   'service/llm/LlamaCppChatClient.java',
                 ],
               },
-              {
-                condition: generator => generator.buildToolGradle,
-                templates: ['gradle/llm.gradle'],
-              },
             ],
           },
           context: application,
         });
-        await this.copyTemplateAsync('../resources/base/{**,**/.*}', this.destinationPath());
       },
     });
   }
 
   get [BaseApplicationGenerator.POST_WRITING]() {
     return this.asPostWritingTaskGroup({
-      async customizePackageJson() {
-        this.packageJson.merge({
-          devDependencies: this.addDevDependencies,
-        });
-      },
       async customizeApplicationYml({ application: { llmModelName } }) {
         this.editFile(`src/main/resources/config/application-dev.yml`, { ignoreNonExisting: true }, content =>
           content.replace(
@@ -112,74 +56,6 @@ export default class extends BaseApplicationGenerator {
           ),
         );
       },
-      async customizeBuildTool({ source, application: { buildToolMaven, buildToolGradle, javaDependencies, llmModelName, llmModelUrl } }) {
-        if (buildToolMaven) {
-          source.addMavenProperty?.([
-            { property: 'javaLlamacpp.version', value: javaDependencies['javaLlamacpp'] },
-            { property: 'llm.model.home', value: 'models' },
-            { property: 'llm.model.name', value: llmModelName },
-            { property: 'llm.model.url', value: llmModelUrl },
-          ]);
-          source.addMavenDependency?.({
-            groupId: 'de.kherud',
-            artifactId: 'llama',
-            version: '${javaLlamacpp.version}',
-          });
-          source.addMavenPlugin?.({
-            additionalContent: `
-            <groupId>com.github.eirslett</groupId>
-            <artifactId>frontend-maven-plugin</artifactId>
-            <configuration>
-                <skip>false</skip>
-            </configuration>                  
-            <executions>
-                <execution>
-                    <id>Download the integration test model if it doesn't exist</id>
-                    <phase>generate-resources</phase>
-                    <goals>
-                        <goal>npm</goal>
-                    </goals>
-                    <configuration>
-                        <arguments>run llm:download-model -- \${project.basedir}/\${llm.model.home} \${llm.model.name} \${llm.model.url}</arguments>
-                    </configuration>
-                </execution>
-            </executions>
-          `,
-          });
-        } else if (buildToolGradle) {
-          [
-            { property: 'javaLlamacppVersion', value: javaDependencies['javaLlamacpp'] },
-            { property: 'llm.model.home', value: 'models' },
-            { property: 'llm.model.name', value: llmModelName },
-            { property: 'llm.model.url', value: llmModelUrl },
-          ].forEach(({ property, value }) => source.addGradleProperty?.({ property, value }));
-          source.addGradleDependency?.({
-            groupId: 'de.kherud',
-            artifactId: 'llama',
-            version: '${javaLlamacppVersion}',
-            scope: 'implementation',
-          });
-          source.applyFromGradle?.({ script: 'gradle/llm.gradle' });
-        }
-      },
     });
   }
 }
-
-const retrieveModels = [
-  {
-    value: 'mistral',
-    name: 'Mistral (7B, 4.1GB)',
-    url: 'https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q4_0.gguf',
-  },
-  {
-    value: 'llama2',
-    name: 'Llama 2 (7B, 3.8GB)',
-    url: 'https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_0.gguf',
-  },
-  {
-    value: 'codellama',
-    name: 'Code Llama (7B, 3.8GB)',
-    url: 'https://huggingface.co/TheBloke/CodeLlama-7B-Instruct-GGUF/resolve/main/codellama-7b-instruct.Q4_0.gguf',
-  },
-];
