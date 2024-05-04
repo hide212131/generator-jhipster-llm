@@ -1,23 +1,15 @@
 package <%= packageName %>.web.rest.chat;
 
 import <%= packageName %>.service.api.dto.*;
-import io.swagger.v3.oas.annotations.Parameter;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.output.Response;
 import jakarta.annotation.Generated;
 import jakarta.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import org.springframework.ai.chat.ChatResponse;
-import org.springframework.ai.chat.StreamingChatClient;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,10 +22,9 @@ import reactor.core.publisher.Mono;
 @RequestMapping("${openapi.my-llm-app.base-path:/v1}")
 public class ChatApiController implements ChatApi {
 
-    private final StreamingChatClient chatClient;
+    private final StreamingChatLanguageModel chatClient;
 
-    @Autowired
-    public ChatApiController(StreamingChatClient chatClient) {
+    public ChatApiController(StreamingChatLanguageModel chatClient) {
         this.chatClient = chatClient;
     }
 
@@ -45,54 +36,69 @@ public class ChatApiController implements ChatApi {
         @Parameter(hidden = true) final ServerWebExchange exchange
     ) {
         return createChatCompletionRequestMono.flatMapMany(createChatCompletionRequest -> {
-            var messages = createChatCompletionRequest.getMessages();
-            var prompt = new Prompt(
-                messages
-                    .stream()
-                    .map(message -> {
-                        if (message instanceof ChatCompletionRequestSystemMessage systemMessage) {
-                            return (Message) new SystemMessage(systemMessage.getContent());
-                        } else if (message instanceof ChatCompletionRequestUserMessage userMessage) {
-                            return (Message) new UserMessage(userMessage.getContent());
-                        } else if (message instanceof ChatCompletionRequestAssistantMessage assistantMessage) {
-                            return (Message) new AssistantMessage(assistantMessage.getContent());
-                        } else {
-                            throw new RuntimeException("Unknown message type");
-                        }
-                    })
-                    .toList()
-            );
-
-            Flux<ChatResponse> chatResponseFlux = chatClient.stream(prompt);
-            var date = System.currentTimeMillis();
-            return chatResponseFlux
-                .map(chatResponse -> {
-                    var responseDelta = new ChatCompletionStreamResponseDelta()
-                        .content(chatResponse.getResult().getOutput().getContent())
-                        .role(ChatCompletionStreamResponseDelta.RoleEnum.ASSISTANT);
-                    var choices = new CreateChatCompletionStreamResponseChoicesInner().index(0L).finishReason(null).delta(responseDelta);
-                    return new CreateChatCompletionStreamResponse(
-                        "chatcmpl-123",
-                        List.of(choices),
-                        date,
-                        "gpt-3.5-turbo",
-                        CreateChatCompletionStreamResponse.ObjectEnum.CHAT_COMPLETION_CHUNK
-                    );
+            var messages = createChatCompletionRequest.getMessages()
+                .stream()
+                .map(message -> {
+                    if (message instanceof ChatCompletionRequestSystemMessage systemMessage) {
+                        return new SystemMessage(systemMessage.getContent());
+                    } else if (message instanceof ChatCompletionRequestUserMessage userMessage) {
+                        return new UserMessage(userMessage.getContent());
+                    } else if (message instanceof ChatCompletionRequestAssistantMessage assistantMessage) {
+                        return new AiMessage(assistantMessage.getContent());
+                    } else {
+                        throw new RuntimeException("Unknown message type");
+                    }
                 })
-                .concatWithValues(
-                    new CreateChatCompletionStreamResponse(
-                        "chatcmpl-123",
-                        List.of(
-                            new CreateChatCompletionStreamResponseChoicesInner()
+                .toList();
+
+            return Flux.create(emitter -> {
+                chatClient.generate(
+                    messages,
+                    new StreamingResponseHandler<AiMessage>() {
+                        @Override
+                        public void onNext(String token) {
+                            var responseDelta = new ChatCompletionStreamResponseDelta()
+                                .content(token)
+                                .role(ChatCompletionStreamResponseDelta.RoleEnum.ASSISTANT);
+                            var choices = new CreateChatCompletionStreamResponseChoicesInner()
                                 .index(0L)
-                                .finishReason(CreateChatCompletionStreamResponseChoicesInner.FinishReasonEnum.STOP)
-                                .delta(new ChatCompletionStreamResponseDelta())
-                        ),
-                        date,
-                        "gpt-3.5-turbo",
-                        CreateChatCompletionStreamResponse.ObjectEnum.CHAT_COMPLETION_CHUNK
-                    )
+                                .finishReason(null)
+                                .delta(responseDelta);
+                            var response = new CreateChatCompletionStreamResponse(
+                                "chatcmpl-123",
+                                List.of(choices),
+                                System.currentTimeMillis(),
+                                "gpt-3.5-turbo",
+                                CreateChatCompletionStreamResponse.ObjectEnum.CHAT_COMPLETION_CHUNK
+                            );
+                            emitter.next(response);
+                        }
+
+                        @Override
+                        public void onComplete(Response<AiMessage> response) {
+                            var streamResponse = new CreateChatCompletionStreamResponse(
+                                "chatcmpl-123",
+                                List.of(
+                                    new CreateChatCompletionStreamResponseChoicesInner()
+                                        .index(0L)
+                                        .finishReason(CreateChatCompletionStreamResponseChoicesInner.FinishReasonEnum.STOP)
+                                        .delta(new ChatCompletionStreamResponseDelta())
+                                ),
+                                System.currentTimeMillis(),
+                                "gpt-3.5-turbo",
+                                CreateChatCompletionStreamResponse.ObjectEnum.CHAT_COMPLETION_CHUNK
+                            );
+                            emitter.next(streamResponse);
+                            emitter.complete();
+                        }
+
+                        @Override
+                        public void onError(Throwable error) {
+                            emitter.error(error);
+                        }
+                    }
                 );
+            });
         });
     }
 }
