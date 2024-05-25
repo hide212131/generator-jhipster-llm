@@ -22,3 +22,12 @@ updates:
     labels:
       - 'theme: dependencies'
       - 'theme: java'
+
+  - package-ecosystem: 'maven'
+    directory: '/generators/langchain4j/resources/'
+    schedule:
+      interval: 'daily'
+      time: '12:00'
+    labels:
+      - 'theme: dependencies'
+      - 'theme: java'
