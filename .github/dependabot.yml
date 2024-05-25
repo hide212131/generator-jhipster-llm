@@ -31,3 +31,12 @@ updates:
     labels:
       - 'theme: dependencies'
       - 'theme: java'
+
+  - package-ecosystem: 'maven'
+    directory: '/generators/spring-ai/resources/'
+    schedule:
+      interval: 'daily'
+      time: '12:00'
+    labels:
+      - 'theme: dependencies'
+      - 'theme: java'
