@@ -2,7 +2,9 @@ package <%= packageName %>.service.llm;
 
 import de.kherud.llama.InferenceParameters;
 import de.kherud.llama.LlamaModel;
+import de.kherud.llama.LlamaOutput;
 import de.kherud.llama.ModelParameters;
+import de.kherud.llama.args.MiroStat;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
@@ -27,24 +29,32 @@ public class LlamaCppStreamingChatModel implements StreamingChatLanguageModel {
         // log.info("LlamaCppStreamingChatModel created: model={}", Path.of(modelHome, modelName));
     }
 
+    private ModelParameters createModelParameters() {
+        return new ModelParameters()
+            .setNGpuLayers(1)
+            .setModelFilePath(Path.of(modelHome, modelName).toString());
+    }
+
+    private InferenceParameters createInferenceParameters(String prompt) {
+        return new InferenceParameters(prompt)
+            .setTemperature(0.7f)
+            .setPenalizeNl(true)
+            //                .setNProbs(10)
+            .setMiroStat(MiroStat.V2);
+    }
+
     @Override
     public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
         ensureNotEmpty(messages, "messages");
 
         String prompt = LlamaCppHelper.generatePrompt(messages);
-        var modelParams = new ModelParameters().setNGpuLayers(1);
-        var inferParams = new InferenceParameters()
-            .setTemperature(0.7f)
-            .setPenalizeNl(true)
-            .setMirostat(InferenceParameters.MiroStat.V2)
-            .setAntiPrompt("User:");
-
-        var modelPath = Path.of(modelHome, modelName).toString();
+        var modelParams = createModelParameters();
+        var inferParams = createInferenceParameters(prompt);
 
         var contentBuilder = new StringBuilder();
-        try (var model = new LlamaModel(modelPath, modelParams)) {
-            Iterable<LlamaModel.Output> outputs = model.generate(prompt, inferParams);
-            for (LlamaModel.Output output : outputs) {
+        try (var model = new LlamaModel(modelParams)) {
+            Iterable<LlamaOutput> outputs = model.generate(inferParams);
+            for (LlamaOutput output : outputs) {
                 handler.onNext(output.text);
                 contentBuilder.append(output.text);
             }
