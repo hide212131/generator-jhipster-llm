@@ -51,10 +51,11 @@ jhipster-llm generate-sample sample.jdl # This is for maven. For gradle, please 
 
 (Note: Currently, only the minimal JHipster application configuration written in `.blueprint/generate-sample/templates/samples/sample.jdl` is supported. We plan to support various other configurations in the future.)
 
-Answer the following questions. By default, local llama.cpp and mistral 7B are selected.
+Answer the following questions. By default, Spring AI, llama.cpp and mistral 7B are selected.
 
+- `Which LLM framwork do you want to use?`
 - `Which LLM library do you want to use?`
-- `Would you like to use a LLM model?`
+- `Which LLM model do you want to use?`
 
 Execute the following to start Spring Boot. The necessary LLM model will be downloaded at startup.
 
