@@ -8,7 +8,7 @@
 
     <properties>
         <!-- Dependency versions -->
-        <javaLlamacpp.version>3.1.1</javaLlamacpp.version>
+        <javaLlamacpp.version>3.2.1</javaLlamacpp.version>
     </properties>
 
     <dependencyManagement>
