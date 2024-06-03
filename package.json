@@ -43,7 +43,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "generator-jhipster": "8.1.0"
+    "generator-jhipster": "8.5.0"
   },
   "devDependencies": {
     "ejs-lint": "2.0.0",
