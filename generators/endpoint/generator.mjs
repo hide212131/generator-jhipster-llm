@@ -56,10 +56,6 @@ export default class extends BaseApplicationGenerator {
                 templates: [data => `web/rest/chat/ChatApi_${data.imperativeOrReactive}.java`],
               },
               {
-                path: 'src/main/resources',
-                templates: ['swagger/api.yml'],
-              },
-              {
                 path: './',
                 templates: ['build-chat.mjs'],
               },
@@ -183,6 +179,19 @@ openapi.my-llm-app.base-path: /api/llm/v1
             return content;
           });
         }
+      },
+      async writingTemplateTask({ application }) {
+        await this.writeFiles({
+          sections: {
+            llm: [
+              {
+                path: 'src/main/resources',
+                templates: ['swagger/api.yml'],
+              },
+            ],
+          },
+          context: application,
+        });
       },
     });
   }
