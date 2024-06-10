@@ -20,7 +20,11 @@ export default class extends FrontendPluginGenerator {
                                     <goal>npm</goal>
                                 </goals>
                                 <configuration>
-                                    <arguments>run llm:download-model -- \${project.basedir}/\${llm.model.home} \${llm.model.name} \${llm.model.url}</arguments>
+                                    ${
+                                      this.blueprintConfig.llmLibrary === 'llamacpp'
+                                        ? '<arguments>run llm:download-model -- ${project.basedir}/${llm.model.home} ${llm.model.name} ${llm.model.url}</arguments>'
+                                        : '<arguments>run llm:ollama pull ${llm.model.name}</arguments>'
+                                    }                                      
                                 </configuration>
                             </execution>$2`,
             );

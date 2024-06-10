@@ -78,23 +78,6 @@ export default class extends BaseApplicationGenerator {
             { property: 'llm.model.home', value: 'models' },
             { property: 'llm.model.name', value: llmModelName },
           ]);
-          this.editFile(`pom.xml`, content => {
-            return content.replace(
-              /(<profile>\s*<id>webapp<\/id>[\s\S]*?<artifactId>frontend-maven-plugin<\/artifactId>[\s\S]*?<\/execution>)(\s*<\/executions>)/,
-              `$1
-                            <execution>
-                                <id>Download the integration test model if it doesn't exist</id>
-                                <phase>generate-resources</phase>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <configuration>
-                                    <arguments>run llm:ollama pull \${llm.model.name}</arguments>
-                                </configuration>
-                            </execution>$2`,
-            );
-          });
-          // ['run', 'llm:ollama', 'pull', project.findProperty('llm.model.name')]
         } else if (buildToolGradle) {
           [
             { property: 'llm.model.home', value: 'models' },
