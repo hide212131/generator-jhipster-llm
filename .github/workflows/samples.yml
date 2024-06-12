@@ -98,7 +98,11 @@ jobs:
           generator-path: generator-jhipster-llm
           cmd: "jhipster-llm generate-sample ${{ matrix.suite }} --build ${{ matrix.build-tool }}  ${{ matrix.reactive && '--reactive' || '' }} --llm-framework ${{ matrix.llm-framework }} --llm-library ${{ matrix.llm-library }} --llm-model-name ${{ matrix.llm-model-name }} --no-insight --skip-git --skip-commit-hook --skip-jhipster-dependencies --skip-install"
       - name: 'TESTS: build test'
-        run: npm run java:jar:dev
+        run: |
+          if [ "${{ matrix.llm-library }}" == "ollama" ]; then
+            npm run services:up
+          fi
+          npm run java:jar:dev
   check-applications:
     permissions:
       contents: none
