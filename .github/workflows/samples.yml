@@ -102,7 +102,16 @@ jobs:
           if [ "${{ matrix.llm-library }}" == "ollama" ]; then
             npm run services:up
           fi
-          npm run java:jar:dev
+          npm run app:start &
+          sleep 30
+          response=$(curl -X POST -H "Content-Type: application/json" -d '{"messages": [{"role": "user", "content": "hello"}]}' -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/llm/v1/chat/completions)
+          if [ "$response" -eq 200 ]
+          then
+            echo "Success"
+          else
+            echo "Failure"
+            exit 1
+          fi
   check-applications:
     permissions:
       contents: none
