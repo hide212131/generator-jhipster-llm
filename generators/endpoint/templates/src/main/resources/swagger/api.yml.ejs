@@ -6087,37 +6087,6 @@ components:
         tool_choice:
           $ref: '#/components/schemas/ChatCompletionToolChoiceOption'
         user: *end_user_param_configuration
-        function_call:
-          deprecated: true
-          description: |
-            Deprecated in favor of `tool_choice`.
-
-            Controls which (if any) function is called by the model.
-            `none` means the model will not call a function and instead generates a message.
-            `auto` means the model can pick between generating a message or calling a function.
-            Specifying a particular function via `{"name": "my_function"}` forces the model to call that function.
-
-            `none` is the default when no functions are present. `auto`` is the default if functions are present.
-          oneOf:
-            - type: string
-              description: >
-                `none` means the model will not call a function and instead generates a message.
-                `auto` means the model can pick between generating a message or calling a function.
-              enum: [none, auto]
-            - $ref: '#/components/schemas/ChatCompletionFunctionCallOption'
-          x-oaiExpandable: true
-        functions:
-          deprecated: true
-          description: |
-            Deprecated in favor of `tools`.
-
-            A list of functions the model may generate JSON inputs for.
-          type: array
-          minItems: 1
-          maxItems: 128
-          items:
-            $ref: '#/components/schemas/ChatCompletionFunctions'
-
       required:
         - messages
 
