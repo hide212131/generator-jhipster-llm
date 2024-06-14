@@ -102,11 +102,26 @@ jobs:
           if [ "${{ matrix.llm-library }}" == "ollama" ]; then
             npm run services:up
           fi
-          npm run app:start &
-          sleep 30
+          npm run app:start
+          # Wait for the server to be ready
+          echo "Waiting for the server to start..."
+          for i in {1..30}; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health)
+            if [ "$response" -eq 200 ]; then
+              echo "Server is up and running."
+              break
+            else
+              echo "Waiting for server to be ready..."
+              sleep 10
+            fi
+          done
+          if [ "$response" != 200 ]; then
+            echo "Server did not start in time."
+            exit 1
+          fi
+          # Perform the test request
           response=$(curl -X POST -H "Content-Type: application/json" -d '{"messages": [{"role": "user", "content": "hello"}]}' -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/llm/v1/chat/completions)
-          if [ "$response" -eq 200 ]
-          then
+          if [ "$response" -eq 200 ]; then
             echo "Success"
           else
             echo "Failure"
