@@ -118,6 +118,17 @@ export default class extends BaseApplicationGenerator {
           source.applyFromGradle?.({ script: 'gradle/llm.gradle' });
         }
       },
+      async customizeDockerServices() {
+        this.editFile(
+          'src/main/docker/app.yml',
+          { ignoreNonExisting: true },
+          content =>
+            `${content}
+    volumes:
+      - ../../../models:/models
+`,
+        );
+      },
     });
   }
 }

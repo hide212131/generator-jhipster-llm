@@ -55,6 +55,20 @@ export default class extends BaseApplicationGenerator {
         tokenizer.uri: '\${SPRING_AI_EMBEDDING_TRANSFORMER_TOKENIZER_URI:https://huggingface.co/intfloat/e5-small-v2/raw/main/tokenizer.json}'`,
           ),
         );
+        this.editFile(`src/main/resources/config/application-prod.yml`, { ignoreNonExisting: true }, content =>
+          content.replace(
+            '\nspring:',
+            `\nspring:
+  ai:
+    llama-cpp:
+      model-home: '\${SPRING_AI_LLAMA_CPP_MODEL_HOME:/models}' # docker volume
+      model-name: '\${SPRING_AI_LLAMA_CPP_MODEL_NAME:${llmModelName}}'
+    embedding:
+      transformer:
+        onnx.modelUri: '\${SPRING_AI_EMBEDDING_TRANSFORMER_ONNX_MODEL_URI:https://huggingface.co/intfloat/e5-small-v2/resolve/main/model.onnx}'
+        tokenizer.uri: '\${SPRING_AI_EMBEDDING_TRANSFORMER_TOKENIZER_URI:https://huggingface.co/intfloat/e5-small-v2/raw/main/tokenizer.json}'`,
+          ),
+        );
       },
     });
   }
