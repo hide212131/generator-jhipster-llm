@@ -95,7 +95,7 @@ export default class extends BaseApplicationGenerator {
         );
       },
       async customizeApplicationYml() {
-        this.editFile(`src/main/resources/config/application-dev.yml`, { ignoreNonExisting: true }, content =>
+        this.editFile(`src/main/resources/config/application.yml`, { ignoreNonExisting: true }, content =>
           content.replace(
             '\n# application:',
             `\n# application:
