@@ -72,7 +72,7 @@ export default class extends BaseApplicationGenerator {
           },
         });
       },
-      async customizeBuildTool({ source, application: { buildToolMaven, buildToolGradle, llmModelName, llmModelUrl } }) {
+      async customizeBuildTool({ source, application: { buildToolMaven, buildToolGradle, llmModelName } }) {
         if (buildToolMaven) {
           source.addMavenProperty?.([
             { property: 'llm.model.home', value: 'models' },
@@ -85,6 +85,15 @@ export default class extends BaseApplicationGenerator {
           ].forEach(({ property, value }) => source.addGradleProperty?.({ property, value }));
           source.applyFromGradle?.({ script: 'gradle/llm.gradle' });
         }
+      },
+      async customizeDockerCompose() {
+        this.editFile(`src/main/docker/app.yml`, { ignoreNonExisting: true }, content =>
+          content.replace(
+            'environment:',
+            `environment:
+      - OLLAMA_URL=http://ollama:11434`,
+          ),
+        );
       },
     });
   }
