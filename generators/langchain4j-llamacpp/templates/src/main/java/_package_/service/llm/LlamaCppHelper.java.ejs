@@ -13,7 +13,7 @@ public class LlamaCppHelper {
             .filter(m -> m.type() == ChatMessageType.SYSTEM)
             .map(m -> (SystemMessage) m)
             .reduce((first, second) -> second)
-            .orElseThrow();
+            .orElse(null); // Allow null SystemMessage
         var userMessages = messages.stream().filter(m -> m.type() == ChatMessageType.USER).map(m -> (UserMessage) m).toList();
         var assistantMessages = messages.stream().filter(m -> m.type() == ChatMessageType.AI).map(m -> (AiMessage) m).toList();
 
@@ -22,7 +22,7 @@ public class LlamaCppHelper {
             var assistantMessage = i < assistantMessages.size() ? assistantMessages.get(i) : null;
 
             sb.append("<s>");
-            if (i == 0) {
+            if (i == 0 && systemMessage != null) {
                 sb.append("<<SYS>>\n").append(systemMessage.text()).append("\n<</SYS>>");
             }
             sb.append("[INST]");
