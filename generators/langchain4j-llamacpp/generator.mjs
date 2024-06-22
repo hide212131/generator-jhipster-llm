@@ -52,6 +52,17 @@ langchain4j:
 `,
           ),
         );
+        this.editFile(`src/main/resources/config/application-prod.yml`, { ignoreNonExisting: true }, content =>
+          content.replace(
+            '\n# application:',
+            `\n# application:
+langchain4j:  
+  llama-cpp:
+    model-home: '\${LANGCHAIN4J_LLAMA_CPP_MODEL_HOME:/models}' # docker volume
+    model-name: '\${LANGCHAIN4J_LLAMA_CPP_MODEL_NAME:${llmModelName}}'
+`,
+          ),
+        );
       },
     });
   }
