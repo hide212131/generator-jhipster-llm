@@ -17,7 +17,7 @@ export default class extends BaseApplicationGenerator {
   get [BaseApplicationGenerator.POST_WRITING]() {
     return this.asPostWritingTaskGroup({
       async customizeApplicationYml({ application: { llmModelName } }) {
-        this.editFile(`src/main/resources/config/application-dev.yml`, { ignoreNonExisting: true }, content =>
+        this.editFile(`src/main/resources/config/application.yml`, { ignoreNonExisting: true }, content =>
           content.replace(
             '\nspring:',
             `\nspring:
