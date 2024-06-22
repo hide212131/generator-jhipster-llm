@@ -99,7 +99,7 @@ jobs:
           cmd: "jhipster-llm generate-sample ${{ matrix.suite }} --build ${{ matrix.build-tool }}  ${{ matrix.reactive && '--reactive' || '' }} --llm-framework ${{ matrix.llm-framework }} --llm-library ${{ matrix.llm-library }} --llm-model-name ${{ matrix.llm-model-name }} --no-insight --skip-git --skip-commit-hook --skip-jhipster-dependencies --skip-install"
       - name: 'SERVER: start server'
         run: |
-          npm run java:docker:prod
+          npm run java:docker:dev
           if [ "${{ matrix.llm-library }}" == "ollama" ]; then
             npm run services:up
           fi
