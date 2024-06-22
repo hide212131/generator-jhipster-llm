@@ -25,13 +25,13 @@ langchain4j:
   ollama:
     chat-model:
       model-name: ${llmModelName}
-      base-url: http://localhost:11434
+      base-url: \${OLLAMA_URL:http://localhost:11434/}
     streaming-chat-model:
       model-name: ${llmModelName}
-      base-url: http://localhost:11434
+      base-url: \${OLLAMA_URL:http://localhost:11434/}
     language-model:
       model-name: ${llmModelName}
-      base-url: http://localhost:11434
+      base-url: \${OLLAMA_URL:http://localhost:11434/}
 `,
           ),
         );
