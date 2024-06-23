@@ -9,6 +9,8 @@ const modelPath = path.join(modelHome, modelName);
 
 const downloadModel = async () => {
   try {
+    await fs.ensureDir(modelHome);
+
     if (await fs.pathExists(modelPath)) {
       console.log(`Model already exists at ${modelPath}`);
       return;

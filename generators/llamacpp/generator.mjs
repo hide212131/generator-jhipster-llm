@@ -93,7 +93,7 @@ export default class extends BaseApplicationGenerator {
         if (buildToolMaven) {
           source.addMavenProperty?.([
             { property: 'javaLlamacpp.version', value: javaDependencies['javaLlamacpp'] },
-            { property: 'llm.model.home', value: 'models' },
+            { property: 'llm.model.home', value: '~/.cache/jhipster-llm/models' },
             { property: 'llm.model.name', value: llmModelName },
             { property: 'llm.model.url', value: llmModelUrl },
           ]);
@@ -105,7 +105,7 @@ export default class extends BaseApplicationGenerator {
         } else if (buildToolGradle) {
           [
             { property: 'javaLlamacppVersion', value: javaDependencies['javaLlamacpp'] },
-            { property: 'llm.model.home', value: 'models' },
+            { property: 'llm.model.home', value: '~/.cache/jhipster-llm/models' },
             { property: 'llm.model.name', value: llmModelName },
             { property: 'llm.model.url', value: llmModelUrl },
           ].forEach(({ property, value }) => source.addGradleProperty?.({ property, value }));
@@ -125,7 +125,7 @@ export default class extends BaseApplicationGenerator {
           content =>
             `${content}
     volumes:
-      - ../../../models:/models
+      - ~/.cache/jhipster-llm/models:/models
 `,
         );
       },
