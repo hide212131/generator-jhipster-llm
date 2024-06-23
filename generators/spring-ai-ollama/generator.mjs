@@ -63,6 +63,30 @@ spring:
           ),
         );
       },
+      // https://github.com/spring-projects/spring-ai/issues/563 workaround
+      async customizeReactiveConfiguration({ application }) {
+        if (application.reactive) {
+          // import import org.springframework.web.client.RestClient;
+          this.editFile(`${application.javaPackageSrcDir}config/WebConfigurer.java`, { ignoreNonExisting: true }, content =>
+            content
+              .replace(
+                'import',
+                `import org.springframework.web.client.RestClient;
+import`,
+              )
+              .replace(
+                '@Bean',
+                `// https://github.com/spring-projects/spring-ai/issues/563 workaround
+    @Bean
+    public RestClient.Builder restClientBuilder() {
+        return RestClient.builder();
+    }
+        
+    @Bean`,
+              ),
+          );
+        }
+      },
     });
   }
 }
