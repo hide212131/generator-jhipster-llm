@@ -75,12 +75,12 @@ export default class extends BaseApplicationGenerator {
       async customizeBuildTool({ source, application: { buildToolMaven, buildToolGradle, llmModelName } }) {
         if (buildToolMaven) {
           source.addMavenProperty?.([
-            { property: 'llm.model.home', value: '~/.cache/jhipster-llm/models' },
+            { property: 'llm.model.home', value: '${env.JHIPSTER_LLM_MODELS_HOME:~/.cache/jhipster-llm/models}' },
             { property: 'llm.model.name', value: llmModelName },
           ]);
         } else if (buildToolGradle) {
           [
-            { property: 'llm.model.home', value: '~/.cache/jhipster-llm/models' },
+            { property: 'llm.model.home', value: '${env.JHIPSTER_LLM_MODELS_HOME:~/.cache/jhipster-llm/models}' },
             { property: 'llm.model.name', value: llmModelName },
           ].forEach(({ property, value }) => source.addGradleProperty?.({ property, value }));
           source.applyFromGradle?.({ script: 'gradle/llm.gradle' });

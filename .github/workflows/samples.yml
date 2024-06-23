@@ -36,6 +36,8 @@ jobs:
   applications:
     name: ${{ matrix.llm-library }} ${{ matrix.llm-framework }} ${{ matrix.build-tool }}${{ matrix.reactive && ' reactive' || '' }}
     runs-on: ${{ matrix.os }}
+    env:
+      JHIPSTER_LLM_MODELS_HOME: ./models
     defaults:
       run:
         shell: bash
