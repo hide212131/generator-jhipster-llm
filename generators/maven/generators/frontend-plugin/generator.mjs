@@ -24,7 +24,8 @@ export default class extends FrontendPluginGenerator {
                                       this.blueprintConfig.llmLibrary === 'llamacpp'
                                         ? '<arguments>run llm:download-model -- ${llm.model.home} ${llm.model.name} ${llm.model.url}</arguments>'
                                         : '<arguments>run llm:ollama pull ${llm.model.name}</arguments>'
-                                    }                                      
+                                    }
+                                    <skip>false</skip>                                      
                                 </configuration>
                             </execution>$2`,
             );

@@ -1,5 +1,8 @@
 import BaseApplicationGenerator from 'generator-jhipster/generators/base-application';
 import command from './command.mjs';
+import fetch from 'node-fetch';
+import { load } from 'cheerio';
+
 export default class extends BaseApplicationGenerator {
   get [BaseApplicationGenerator.INITIALIZING]() {
     return this.asInitializingTaskGroup({
@@ -10,19 +13,71 @@ export default class extends BaseApplicationGenerator {
     });
   }
 
+  async retrieveModels() {
+    try {
+      const response = await fetch('https://ollama.com/library');
+      const html = await response.text();
+      const $ = load(html);
+
+      const models = [];
+
+      $('li.flex.items-baseline').each((index, element) => {
+        const name = $(element).find('h2').text().trim();
+        const description = $(element).find('p.max-w-md').text().trim();
+        const link = $(element).find('a').attr('href');
+
+        models.push({ name, description, link });
+      });
+
+      return models;
+    } catch (error) {
+      console.error('Error fetching models:', error);
+      return [{ name: 'mistral', description: 'Fallback option', link: '/library/mistral' }];
+    }
+  }
+
+  async retrieveModelVariants(modelLink) {
+    try {
+      const response = await fetch(`https://ollama.com${modelLink}`);
+      const html = await response.text();
+      const $ = load(html);
+
+      const variants = [];
+      $('#secondary-tags a').each((index, element) => {
+        const variantName = $(element).find('span[title]').attr('title');
+        const size = $(element).find('span.text-neutral-400').text().trim();
+        variants.push({ value: variantName, name: `${variantName} (${size})` });
+      });
+
+      return variants.length > 0 ? variants : [{ value: modelLink.split('/').pop(), name: 'Default' }];
+    } catch (error) {
+      console.error('Error fetching model variants:', error);
+      return [{ value: modelLink.split('/').pop(), name: 'Default (Error occurred)' }];
+    }
+  }
+
   get [BaseApplicationGenerator.PROMPTING]() {
     return this.asPromptingTaskGroup({
       async promptingTemplateTask() {
-        await this.prompt(
-          {
-            type: 'list',
-            name: 'llmModelName',
-            message: 'Which LLM model do you want to use (https://ollama.com/library)?',
-            choices: retrieveModels,
-            default: 'mistral',
-          },
-          this.blueprintStorage,
-        );
+        const models = await this.retrieveModels();
+
+        const { selectedModel } = await this.prompt({
+          type: 'list',
+          name: 'selectedModel',
+          message: 'Which LLM model do you want to use?',
+          choices: models.map(model => ({ name: `${model.name} - ${model.description}`, value: model })),
+        });
+
+        const variants = await this.retrieveModelVariants(selectedModel.link);
+
+        const { selectedParam } = await this.prompt({
+          type: 'list',
+          name: 'selectedParam',
+          message: `Select a variant for ${selectedModel.name}:`,
+          choices: variants,
+        });
+
+        this.blueprintConfig.llmModelName = `${selectedModel.name}:${selectedParam}`;
       },
     });
   }
@@ -98,21 +153,3 @@ export default class extends BaseApplicationGenerator {
     });
   }
 }
-
-const retrieveModels = [
-  { value: 'mistral', name: 'Mistral (7B, 4.1GB)' },
-  { value: 'llama2', name: 'Llama 2 (7B, 3.8GB)' },
-  { value: 'dolphin-phi', name: 'Dolphin Phi (2.7B, 1.6GB)' },
-  { value: 'phi', name: 'Phi-2 (2.7B, 1.7GB)' },
-  { value: 'neural-chat', name: 'Neural Chat (7B, 4.1GB)' },
-  { value: 'starling-lm', name: 'Starling (7B, 4.1GB)' },
-  { value: 'codellama', name: 'Code Llama (7B, 3.8GB)' },
-  { value: 'llama2-uncensored', name: 'Llama 2 Uncensored (7B, 3.8GB)' },
-  { value: 'llama2:13b', name: 'Llama 2 13B (13B, 7.3GB)' },
-  { value: 'llama2:70b', name: 'Llama 2 70B (70B, 39GB)' },
-  { value: 'orca-mini', name: 'Orca Mini (3B, 1.9GB)' },
-  { value: 'vicuna', name: 'Vicuna (7B, 3.8GB)' },
-  { value: 'llava', name: 'LLaVA (7B, 4.5GB)' },
-  { value: 'gemma:2b', name: 'Gemma (2B, 1.4GB)' },
-  { value: 'gemma:7b', name: 'Gemma (7B, 4.8GB)' },
-];
