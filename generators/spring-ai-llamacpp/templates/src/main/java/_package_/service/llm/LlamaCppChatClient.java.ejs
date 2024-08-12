@@ -9,14 +9,15 @@ import java.nio.file.Path;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.ChatClient;
-import org.springframework.ai.chat.ChatResponse;
-import org.springframework.ai.chat.Generation;
-import org.springframework.ai.chat.StreamingChatClient;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.chat.model.StreamingChatModel;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import reactor.core.publisher.Flux;
 
-public class LlamaCppChatClient implements ChatClient, StreamingChatClient {
+public class LlamaCppChatClient implements ChatModel, StreamingChatModel {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -70,6 +71,11 @@ public class LlamaCppChatClient implements ChatClient, StreamingChatClient {
     }
 
     @Override
+    public ChatOptions getDefaultOptions() {
+        return null;
+    }
+
+    @Override
     public Flux<ChatResponse> stream(Prompt prompt) {
         // logger.info("generateStream: prompt={}", prompt.getContents());
         // LlamaModel.setLogger((level, message) -> System.out.print(message));
@@ -82,10 +88,10 @@ public class LlamaCppChatClient implements ChatClient, StreamingChatClient {
                 Flux
                     .fromIterable(model.generate(inferParams))
                     .map(output -> {
-                        var text = output.text;
-                        // System.out.print(text);
-                        return new ChatResponse(List.of(new Generation(text)));
-                    }),
+                    var text = output.text;
+                    // System.out.print(text);
+                    return new ChatResponse(List.of(new Generation(text)));
+                }),
             LlamaModel::close
         );
     }

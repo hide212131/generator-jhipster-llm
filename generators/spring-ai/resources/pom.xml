@@ -8,7 +8,7 @@
 
     <properties>
         <!-- Dependency versions -->
-        <springAi.version>0.8.0</springAi.version>
+        <springAi.version>1.0.0-SNAPSHOT</springAi.version>
     </properties>
 
     <dependencyManagement>

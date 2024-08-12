@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.ai.chat.ChatResponse;
-import org.springframework.ai.chat.StreamingChatClient;
+import org.springframework.ai.chat.model.StreamingChatModel;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -30,10 +30,10 @@ import reactor.core.publisher.Mono;
 @RequestMapping("${openapi.my-llm-app.base-path:/v1}")
 public class ChatApiController implements ChatApi {
 
-    private final StreamingChatClient chatClient;
+    private final StreamingChatModel chatClient;
 
     @Autowired
-    public ChatApiController(StreamingChatClient chatClient) {
+    public ChatApiController(StreamingChatModel chatClient) {
         this.chatClient = chatClient;
     }
 

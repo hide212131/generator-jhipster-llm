@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 
 import java.io.IOException;
 import java.util.List;
-import org.springframework.ai.chat.StreamingChatClient;
+import org.springframework.ai.chat.model.StreamingChatModel;
 import org.springframework.ai.chat.ChatResponse;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
@@ -30,10 +30,10 @@ import reactor.core.scheduler.Schedulers;
 @RequestMapping("${openapi.my-llm-app.base-path:/v1}")
 public class ChatApiController implements ChatApi {
 
-    private final StreamingChatClient chatClient;
+    private final StreamingChatModel chatClient;
 
     @Autowired
-    public ChatApiController(StreamingChatClient chatClient) {
+    public ChatApiController(StreamingChatModel chatClient) {
         this.chatClient = chatClient;
     }
 
