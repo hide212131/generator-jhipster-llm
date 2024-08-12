@@ -47,7 +47,7 @@ export default class extends BaseApplicationGenerator {
             `\nspring:
   ai:
     llama-cpp:
-      model-home: '\${SPRING_AI_LLAMA_CPP_MODEL_HOME:models}'
+      model-home: '\${SPRING_AI_LLAMA_CPP_MODEL_HOME:\${user.home}/.cache/jhipster-llm/models}'
       model-name: '\${SPRING_AI_LLAMA_CPP_MODEL_NAME:${llmModelName}}'
     embedding:
       transformer:
