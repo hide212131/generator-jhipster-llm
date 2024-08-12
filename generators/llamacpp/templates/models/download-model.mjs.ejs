@@ -1,10 +1,19 @@
-import fetch from 'node-fetch';
-import fs from 'fs-extra';
 import path from 'path';
 import { pipeline } from 'stream/promises';
+import fetch from 'node-fetch';
+import fs from 'fs-extra';
 import { Transform } from 'readable-stream';
 
-const [modelHome, modelName, modelUrl] = process.argv.slice(2);
+let [modelHome, modelName, modelUrl] = process.argv.slice(2);
+
+// Overwrite modelHome if the environment variable JHIPSTER_LLM_MODELS_HOME is set
+if (process.env.JHIPSTER_LLM_MODELS_HOME) {
+  console.log(`Environment variable JHIPSTER_LLM_MODELS_HOME is set. Overwriting modelHome.`);
+  console.log(`Original modelHome: ${modelHome}`);
+  modelHome = process.env.JHIPSTER_LLM_MODELS_HOME;
+  console.log(`New modelHome: ${modelHome}`);
+}
+
 const modelPath = path.join(modelHome, modelName);
 
 const downloadModel = async () => {
@@ -16,7 +25,7 @@ const downloadModel = async () => {
       return;
     }
 
-    console.log(`Downloading model from ${modelUrl}`);
+    console.log(`Downloading model from ${modelUrl} to ${modelHome}`);
     const res = await fetch(modelUrl, { redirect: 'follow' });
     if (!res.ok) {
       throw new Error(`Failed to download model: ${res.status} ${res.statusText}`);

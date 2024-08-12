@@ -3,7 +3,13 @@ node {
 }
 
 task downloadLLMModel(type: NpmTask) {
-    args = ['run', 'llm:download-model', '--', "${project.findProperty('llm.model.home')}", project.findProperty('llm.model.name'), project.findProperty('llm.model.url')]
+    def modelHome = project.findProperty("llm.model.home") ?: ""
+    if (modelHome.startsWith("~")) {
+        def userHome = System.getProperty("user.home")
+        modelHome = userHome + modelHome.substring(1)
+    }
+
+    args = ['run', 'llm:download-model', '--', modelHome, project.findProperty('llm.model.name'), project.findProperty('llm.model.url')]
 }
 
 processResources.dependsOn downloadLLMModel
