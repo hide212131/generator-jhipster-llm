@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`SubGenerator app of llm JHipster blueprint > run > should succeed 1`] = `
+exports[`SubGenerator llm of llm JHipster blueprint > run > should succeed 1`] = `
 {
   ".devcontainer/Dockerfile": {
     "stateCleared": "modified",
@@ -44,16 +44,7 @@ exports[`SubGenerator app of llm JHipster blueprint > run > should succeed 1`] =
   "README.md": {
     "stateCleared": "modified",
   },
-  "build-chat.mjs": {
-    "stateCleared": "modified",
-  },
   "checkstyle.xml": {
-    "stateCleared": "modified",
-  },
-  "models/README.md": {
-    "stateCleared": "modified",
-  },
-  "models/download-model.mjs": {
     "stateCleared": "modified",
   },
   "mvnw": {
@@ -137,9 +128,6 @@ exports[`SubGenerator app of llm JHipster blueprint > run > should succeed 1`] =
   "src/main/java/com/mycompany/myapp/config/CacheConfiguration.java": {
     "stateCleared": "modified",
   },
-  "src/main/java/com/mycompany/myapp/config/ChatCompletionRequestMessageDeserializer.java": {
-    "stateCleared": "modified",
-  },
   "src/main/java/com/mycompany/myapp/config/Constants.java": {
     "stateCleared": "modified",
   },
@@ -152,19 +140,10 @@ exports[`SubGenerator app of llm JHipster blueprint > run > should succeed 1`] =
   "src/main/java/com/mycompany/myapp/config/DateTimeFormatConfiguration.java": {
     "stateCleared": "modified",
   },
-  "src/main/java/com/mycompany/myapp/config/JacksonConfig.java": {
-    "stateCleared": "modified",
-  },
   "src/main/java/com/mycompany/myapp/config/JacksonConfiguration.java": {
     "stateCleared": "modified",
   },
   "src/main/java/com/mycompany/myapp/config/LiquibaseConfiguration.java": {
-    "stateCleared": "modified",
-  },
-  "src/main/java/com/mycompany/myapp/config/LlamaCppAutoConfiguration.java": {
-    "stateCleared": "modified",
-  },
-  "src/main/java/com/mycompany/myapp/config/LlamaCppProperties.java": {
     "stateCleared": "modified",
   },
   "src/main/java/com/mycompany/myapp/config/LoggingAspectConfiguration.java": {
@@ -266,15 +245,6 @@ exports[`SubGenerator app of llm JHipster blueprint > run > should succeed 1`] =
   "src/main/java/com/mycompany/myapp/service/dto/package-info.java": {
     "stateCleared": "modified",
   },
-  "src/main/java/com/mycompany/myapp/service/llm/LlamaCppChatClient.java": {
-    "stateCleared": "modified",
-  },
-  "src/main/java/com/mycompany/myapp/service/llm/LlamaPrompt.java": {
-    "stateCleared": "modified",
-  },
-  "src/main/java/com/mycompany/myapp/service/llm/package-info.java": {
-    "stateCleared": "modified",
-  },
   "src/main/java/com/mycompany/myapp/service/mapper/UserMapper.java": {
     "stateCleared": "modified",
   },
@@ -303,18 +273,6 @@ exports[`SubGenerator app of llm JHipster blueprint > run > should succeed 1`] =
     "stateCleared": "modified",
   },
   "src/main/java/com/mycompany/myapp/web/rest/UserResource.java": {
-    "stateCleared": "modified",
-  },
-  "src/main/java/com/mycompany/myapp/web/rest/chat/ChatApi.java": {
-    "stateCleared": "modified",
-  },
-  "src/main/java/com/mycompany/myapp/web/rest/chat/ChatApiController.java": {
-    "stateCleared": "modified",
-  },
-  "src/main/java/com/mycompany/myapp/web/rest/chat/ModelsApiController.java": {
-    "stateCleared": "modified",
-  },
-  "src/main/java/com/mycompany/myapp/web/rest/chat/package-info.java": {
     "stateCleared": "modified",
   },
   "src/main/java/com/mycompany/myapp/web/rest/errors/BadRequestAlertException.java": {
@@ -396,9 +354,6 @@ exports[`SubGenerator app of llm JHipster blueprint > run > should succeed 1`] =
     "stateCleared": "modified",
   },
   "src/main/resources/logback-spring.xml": {
-    "stateCleared": "modified",
-  },
-  "src/main/resources/swagger/api.yml": {
     "stateCleared": "modified",
   },
   "src/main/resources/templates/error.html": {

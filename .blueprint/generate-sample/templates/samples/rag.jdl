@@ -1,0 +1,19 @@
+application {
+  config {
+    applicationType monolith
+    databaseType sql
+    devDatabaseType postgresql
+    prodDatabaseType postgresql
+    clientFramework react
+    enableSwaggerCodegen true
+    cacheProvider no
+  }
+  entities *
+}
+
+entity DocumentAsset {
+    filename String required,
+    data Blob required
+}
+
+service DocumentAsset with serviceClass

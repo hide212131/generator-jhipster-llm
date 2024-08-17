@@ -1,0 +1,88 @@
+package <%= packageName %>.config;
+
+import javax.sql.DataSource;
+
+import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.vectorstore.PgVectorStore;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.autoconfigure.jdbc.JdbcConnectionDetails;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
+import org.springframework.ai.autoconfigure.vectorstore.pgvector.PgVectorStoreAutoConfiguration;
+import org.springframework.ai.autoconfigure.vectorstore.pgvector.PgVectorStoreProperties;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.util.StringUtils;
+
+@Configuration
+// @AutoConfiguration(after = {CustomPgVectorStoreConfiguration.SecondaryJdbcTemplate.class})
+//@ConditionalOnClass({PgVectorStore.class, DataSource.class, CustomPgVectorStoreConfiguration.SecondaryJdbcTemplate.class})
+//@EnableConfigurationProperties({PgVectorStoreProperties.class})
+public class CustomPgVectorStoreConfiguration {
+
+    @Bean
+    @Primary
+    @ConfigurationProperties(prefix = "spring.datasource")
+    public DataSourceProperties firstDataSourceProperties() {
+        return new DataSourceProperties();
+    }
+
+    @Bean
+    @Primary
+    @ConfigurationProperties("spring.datasource.hikari")
+    public HikariDataSource firstDataSource(DataSourceProperties firstDataSourceProperties) {
+        return firstDataSourceProperties.initializeDataSourceBuilder().type(HikariDataSource.class).build();
+    }
+
+    @Bean
+    @ConfigurationProperties("spring.ai.vectorstore.pgvector.customize.datasource")
+    public DataSourceProperties secondDataSourceProperties() {
+        return new DataSourceProperties();
+    }
+
+    @Bean
+    @ConfigurationProperties("spring.ai.vectorstore.pgvector.customize.datasource.hikari")
+    public HikariDataSource secondDataSource(
+        @Qualifier("secondDataSourceProperties") DataSourceProperties secondDataSourceProperties) {
+        return secondDataSourceProperties.initializeDataSourceBuilder().type(HikariDataSource.class).build();
+    }
+
+    @Bean
+    @Primary
+    public JdbcTemplate firstJdbcTemplate(DataSource secondaryDataSource) {
+        return new JdbcTemplate(secondaryDataSource);
+    }
+    @Bean
+    public JdbcTemplate secondaryJdbcTemplate(@Qualifier("secondDataSource") DataSource secondaryDataSource) {
+        return new JdbcTemplate(secondaryDataSource);
+    }
+
+    @Bean
+    //@ConditionalOnMissingBean
+    public PgVectorStore vectorStore(@Qualifier("secondaryJdbcTemplate") JdbcTemplate secondaryJdbcTemplate, EmbeddingModel embeddingModel, PgVectorStoreProperties properties) {
+        boolean initializeSchema = properties.isInitializeSchema();
+        return new PgVectorStore.Builder(secondaryJdbcTemplate, embeddingModel)
+            .withSchemaName(properties.getSchemaName())
+            .withVectorTableName(properties.getTableName())
+            .withVectorTableValidationsEnabled(properties.isSchemaValidation())
+            .withDimensions(properties.getDimensions())
+            .withDistanceType(properties.getDistanceType())
+            .withRemoveExistingVectorStoreTable(properties.isRemoveExistingVectorStoreTable())
+            .withIndexType(properties.getIndexType())
+            .withInitializeSchema(initializeSchema)
+            .build();
+    }
+
+
+
+}

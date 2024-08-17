@@ -52,6 +52,7 @@ export default class extends BaseApplicationGenerator {
         } else {
           await this.composeWithJHipster(`jhipster-llm:langchain4j`);
         }
+        await this.composeWithJHipster('jhipster-llm:rag');
       },
     });
   }
