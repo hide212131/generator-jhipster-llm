@@ -170,30 +170,41 @@ export default class extends BaseApplicationGenerator {
           });
         }
       },
-      async customizeService({ application }) {
+      async customizeController({ application }) {
         if (this.blueprintConfig.enableRAG) {
-          this.editFile(`${application.javaPackageSrcDir}service/DocumentAssetService.java`, content =>
+          this.editFile(`${application.javaPackageSrcDir}web/rest/chat/ChatApiController.java`, content =>
             content
               .replace(
-                'private final DocumentAssetRepository documentAssetRepository;',
-                `private final DocumentAssetRepository documentAssetRepository;
+                'import com.mycompany.myapp.service.api.dto.*;',
+                `import com.mycompany.myapp.service.api.dto.*;
+import com.mycompany.myapp.service.RAGService;
+`,
+              )
+              .replace(
+                'private final StreamingChatModel chatClient;',
+                `private final StreamingChatModel chatClient;
 
     private final RAGService ragService;
 `,
               )
               .replace(
-                /DocumentAssetService\([\s\S]*?DocumentAssetRepository documentAssetRepository[\s\S]*?\) {/,
-                `DocumentAssetService(DocumentAssetRepository documentAssetRepository, RAGService ragService) {`,
+                /ChatApiController\([\s\S]*?StreamingChatModel chatClient[\s\S]*?\) {/,
+                `ChatApiController(StreamingChatModel chatClient, RAGService ragService) {`,
               )
               .replace(
-                'this.documentAssetRepository = documentAssetRepository;',
-                `this.documentAssetRepository = documentAssetRepository;
+                'this.chatClient = chatClient;',
+                `this.chatClient = chatClient;
         this.ragService = ragService;`,
               )
               .replace(
-                'return documentAssetRepository.save(documentAsset);',
-                `documentAssetRepository.save(documentAsset);
-        return ragService.storeFile(documentAsset);`,
+                'SseEmitter emitter = new SseEmitter();',
+                `// search related contents from vector store
+        // Here, as a provisional behavior, RAG works when the "gpt-4k" model is used.
+        if (createChatCompletionRequest.getModel().equals(CreateChatCompletionRequest.ModelEnum._4)) {
+            prompt = ragService.retrieveAndGeneratePrompt(prompt);
+        }
+
+        SseEmitter emitter = new SseEmitter();`,
               ),
           );
         }
