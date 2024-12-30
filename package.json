@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
-    "generator-jhipster": "8.7.3",
+    "generator-jhipster": "8.8.0",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
