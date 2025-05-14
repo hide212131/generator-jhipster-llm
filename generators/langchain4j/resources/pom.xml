@@ -8,7 +8,7 @@
 
     <properties>
         <!-- Dependency versions -->
-        <langchain4j.version>0.36.2</langchain4j.version>
+        <langchain4j.version>1.0.0</langchain4j.version>
     </properties>
 
     <dependencyManagement>
