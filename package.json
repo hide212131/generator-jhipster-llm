@@ -56,7 +56,7 @@
     "eslint-plugin-prettier": "5.5.4",
     "husky": "^9.0.11",
     "prettier": "3.6.2",
-    "vitest": "1.6.0",
+    "vitest": "3.2.4",
     "yeoman-test": ">=8.0.0-rc.1"
   },
   "engines": {
